@@ -1,0 +1,395 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>王经理讲GEO · 贴纸风科普</title>
+<script src="../lib/core.js"></script>
+<script src="captions.js"></script>
+</head><body><div id="stage"></div>
+<script>
+/* ===== 王经理讲GEO · 贴纸风科普 · 竖屏 1080x1920 · 88.32s =====
+   基于 sy-style-100 的 07 贴纸风视觉语言：绿色切割垫板、模切白边贴纸拍落、
+   马克笔箭头、镜头沿竖版长板逐章下移。字幕泡固定在底部，随配音逐句弹出。 */
+const { E, clamp, lerp } = Reel;
+const RS = Reel.RS;
+
+// portrait stage (core.js 默认 1920x1080，这里自建竖屏舞台 + 抖动接口)
+const stage = document.getElementById('stage');
+stage.style.cssText = 'position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:hidden;transform-origin:0 0;';
+if (Reel.RENDER && RS !== 1) stage.style.transform = `scale(${RS})`;
+window.__setJitter = (dx, dy) => { stage.style.transform = `translate(${dx}px, ${dy}px)` + (RS !== 1 ? ` scale(${RS})` : ''); };
+
+const W = Math.round(1080 * RS), H = Math.round(1920 * RS), K = W / 1080;
+const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+cv.style.cssText = 'position:absolute;left:0;top:0;width:1080px;height:1920px';
+stage.appendChild(cv);
+const ctx = cv.getContext('2d');
+const SANS = '"Microsoft YaHei"';
+const EMO = '"Segoe UI Emoji"';
+
+// ---------- 章节（与配音/SRT 同步） ----------
+const CH = [
+  { t0: 0.000, t1: 9.742, name: '前言' },
+  { t0: 9.742, t1: 17.452, name: 'SEO旧时代' },
+  { t0: 17.452, t1: 31.526, name: 'AI新时代' },
+  { t0: 31.526, t1: 59.608, name: '三点区别' },
+  { t0: 59.608, t1: 77.547, name: '窗口期' },
+  { t0: 77.547, t1: 89.400, name: '结尾' },
+];
+const ZH = 1920;                       // 每章一屏高
+const BW = 1500, BH = CH.length * ZH + 200, BS = 0.9;
+
+// ---------- 垫板 ----------
+const board = document.createElement('canvas'); board.width = Math.round(BW * BS); board.height = Math.round(BH * BS);
+function buildBoard() {
+  const b = board.getContext('2d'); b.setTransform(BS, 0, 0, BS, 0, 0);
+  b.fillStyle = '#1f6a52'; b.fillRect(0, 0, BW, BH);
+  for (let i = 0; i < 9000; i++) { b.fillStyle = `rgba(${Math.random() < 0.5 ? '0,0,0' : '255,255,255'},${Math.random() * 0.035})`; b.fillRect(Math.random() * BW, Math.random() * BH, 2 + Math.random() * 3, 2 + Math.random() * 3); }
+  for (let x = 0; x <= BW; x += 25) { b.strokeStyle = x % 125 === 0 ? 'rgba(220,245,230,.42)' : 'rgba(220,245,230,.16)'; b.lineWidth = x % 125 === 0 ? 2 : 1; b.beginPath(); b.moveTo(x, 0); b.lineTo(x, BH); b.stroke(); }
+  for (let y = 0; y <= BH; y += 25) { b.strokeStyle = y % 125 === 0 ? 'rgba(220,245,230,.42)' : 'rgba(220,245,230,.16)'; b.lineWidth = y % 125 === 0 ? 2 : 1; b.beginPath(); b.moveTo(0, y); b.lineTo(BW, y); b.stroke(); }
+  b.fillStyle = 'rgba(220,245,230,.55)'; b.font = '600 18px "Microsoft YaHei"';
+  for (let y = 125, n = 1; y < BH; y += 125, n++) b.fillText(String(n), 6, y - 4);
+  b.strokeStyle = 'rgba(220,245,230,.12)'; b.lineWidth = 1.5;
+  for (let k = -BH; k < BW; k += 500) { b.beginPath(); b.moveTo(k, BH); b.lineTo(k + BH, 0); b.stroke(); }
+  b.strokeStyle = 'rgba(255,255,255,.07)'; b.lineWidth = 1.2;
+  for (let i = 0; i < 60; i++) { const x = Math.random() * BW, y = Math.random() * BH, a = Math.random() * 3, l = 40 + Math.random() * 160; b.beginPath(); b.moveTo(x, y); b.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); b.stroke(); }
+  // 章节分隔虚线 + 章节名（居中，保证任何镜头下都可见）
+  CH.forEach((c, i) => {
+    const y = i * ZH;
+    if (i) { b.setLineDash([26, 22]); b.strokeStyle = 'rgba(255,222,74,.5)'; b.lineWidth = 5; b.beginPath(); b.moveTo(60, y); b.lineTo(BW - 60, y); b.stroke(); b.setLineDash([]); }
+    b.textAlign = 'center';
+    b.fillStyle = 'rgba(255,222,74,.9)'; b.font = '900 40px "Microsoft YaHei"';
+    b.fillText(`0${i + 1} · ${c.name}`, 750, y + 150);
+    b.textAlign = 'left';
+  });
+}
+
+// ---------- 贴纸工厂（与 07 相同工艺：模切白边、光泽、阴影） ----------
+function makeSticker(drawFn, w, h, border = 18) {
+  const pad = border + 6;
+  const c = document.createElement('canvas'); c.width = Math.round((w + pad * 2) * K); c.height = Math.round((h + pad * 2) * K);
+  const g = c.getContext('2d'); g.scale(K, K); g.translate(pad, pad);
+  const art = document.createElement('canvas'); art.width = c.width; art.height = c.height;
+  const a = art.getContext('2d'); a.scale(K, K); a.translate(pad, pad); drawFn(a, w, h);
+  const sil = document.createElement('canvas'); sil.width = c.width; sil.height = c.height;
+  const s = sil.getContext('2d'); s.drawImage(art, 0, 0); s.globalCompositeOperation = 'source-in'; s.fillStyle = '#ffffff'; s.fillRect(0, 0, c.width, c.height);
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  for (let i = 0; i < 24; i++) { const an = i / 24 * Math.PI * 2; g.drawImage(sil, Math.cos(an) * border * K, Math.sin(an) * border * K); }
+  for (let i = 0; i < 12; i++) { const an = i / 12 * Math.PI * 2; g.drawImage(sil, Math.cos(an) * border * 0.5 * K, Math.sin(an) * border * 0.5 * K); }
+  g.drawImage(art, 0, 0);
+  const all = document.createElement('canvas'); all.width = c.width; all.height = c.height;
+  const al = all.getContext('2d'); al.drawImage(c, 0, 0); al.globalCompositeOperation = 'source-in'; al.fillStyle = '#000'; al.fillRect(0, 0, c.width, c.height);
+  // 预烘焙阴影（落地后每帧直接贴图，避免逐帧模糊计算）
+  const sh = document.createElement('canvas'); sh.width = c.width; sh.height = c.height;
+  const sg2 = sh.getContext('2d'); sg2.filter = `blur(${4 * K}px)`; sg2.drawImage(all, 6 * K, 10 * K);
+  return { c, all, sh, w: w + pad * 2, h: h + pad * 2 };
+}
+function emojiArt(em, size) { return (g, w, h) => { g.font = `${size}px ${EMO}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(em, w / 2, h / 2 + size * 0.06); }; }
+function labelArt(txt, bg, fg, size) {
+  return (g, w, h) => { g.fillStyle = bg; g.beginPath(); g.roundRect(0, 0, w, h, h / 2); g.fill(); g.fillStyle = fg; g.font = `900 ${size}px ${SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2, h / 2 + 2); };
+}
+function numArt(n, bg) { return (g, w, h) => { g.fillStyle = bg; g.beginPath(); g.arc(w / 2, h / 2, w / 2, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = `900 ${w * 0.62}px ${SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(n), w / 2, h / 2 + 3); }; }
+function titleArt(txt) {
+  return (g, w, h) => {
+    g.fillStyle = '#ffde4a'; g.beginPath(); g.roundRect(0, 0, w, h, 26); g.fill();
+    g.fillStyle = '#1b1b1b'; g.font = `900 ${h * 0.56}px ${SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2, h / 2 + 4);
+  };
+}
+function burstArt(txt) {
+  return (g, w, h) => {
+    g.fillStyle = '#ff4d2e'; g.beginPath();
+    for (let i = 0; i < 28; i++) { const a = i / 28 * Math.PI * 2, r = (i % 2 ? 0.78 : 1) * w / 2; g.lineTo(w / 2 + Math.cos(a) * r, h / 2 + Math.sin(a) * r * (h / w)); }
+    g.fill();
+    g.fillStyle = '#fff6d6'; g.font = `900 ${w * 0.22}px ${SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2, h / 2 + 6);
+  };
+}
+function noteArt(txt, bg = '#fff3a3') {
+  return (g, w, h) => {
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(0,0,0,.06)'; g.fillRect(0, 0, w, 26);
+    g.fillStyle = '#2b2b2b'; g.font = `700 46px ${SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    txt.split('\n').forEach((l, i, a) => g.fillText(l, w / 2, h / 2 + 10 + (i - (a.length - 1) / 2) * 62));
+  };
+}
+
+// ---------- 贴纸清单 ----------
+const ST = [];
+function add(s, x, y, rot, t0) { ST.push({ s, x, y, rot, t0 }); }
+function buildStickers() {
+  const b0 = 0, b1 = ZH, b2 = 2 * ZH, b3 = 3 * ZH, b4 = 4 * ZH, b5 = 5 * ZH;
+  // 每章内容铺满 zone+200..1400（有效视野约 3..1416，z=1.02..1.15），镜头 x=750 居中
+  // Z0 前言
+  add(makeSticker(titleArt('还在花钱做 SEO？'), 720, 140), 750, b0 + 260, -0.04, 0.45);
+  add(makeSticker(emojiArt('🤔', 170), 180, 180), 400, b0 + 440, 0.1, 1.6);
+  add(makeSticker(labelArt('客户不搜了 · 直接问 AI', '#111827', '#ffde4a', 52), 680, 92), 750, b0 + 640, 0.03, 3.4);
+  add(makeSticker(emojiArt('🤖', 180), 190, 190), 1080, b0 + 840, -0.12, 4.0);
+  add(makeSticker(noteArt('我是王经理\n专讲获客方法'), 340, 260), 450, b0 + 880, -0.05, 5.5);
+  add(makeSticker(emojiArt('👋', 150), 160, 160), 830, b0 + 1040, 0.15, 7.18);
+  // Z1 SEO旧时代
+  add(makeSticker(labelArt('以前：打开百度搜关键词', '#3b82f6', '#fff', 50), 660, 88), 750, b1 + 300, 0.02, 9.58);
+  add(makeSticker(emojiArt('🔍', 170), 180, 180), 420, b1 + 440, 0.08, 10.5);
+  add(makeSticker(noteArt('一页页翻\n谁排前面\n谁接电话'), 340, 330), 750, b1 + 680, 0.04, 11.5);
+  add(makeSticker(titleArt('这就是 SEO'), 480, 110), 700, b1 + 970, -0.03, 15.0);
+  add(makeSticker(burstArt('抢排名'), 360, 360), 1040, b1 + 1010, 0.1, 15.69);
+  add(makeSticker(emojiArt('📞', 150), 160, 160), 430, b1 + 1060, -0.1, 16.19);
+  // Z2 AI新时代
+  add(makeSticker(titleArt('但现在变了'), 520, 120), 560, b2 + 330, -0.04, 17.39);
+  add(makeSticker(labelArt('豆包 · DeepSeek', '#8b5cf6', '#fff', 52), 560, 92), 900, b2 + 520, 0.05, 18.6);
+  add(makeSticker(emojiArt('💬', 160), 170, 170), 410, b2 + 520, -0.1, 19.29);
+  add(makeSticker(noteArt('直接问一句\n「我该怎么选」'), 380, 260), 540, b2 + 800, 0.03, 20.29);
+  add(makeSticker(labelArt('AI 几秒给答案 · 还带推荐', '#111827', '#7dffb2', 56), 780, 96), 750, b2 + 1000, -0.03, 22.19);
+  add(makeSticker(titleArt('这就是 GEO'), 500, 115), 750, b2 + 1140, 0.03, 26.89);
+  // Z3 三点区别（镜头缓慢推进，遮挡线随 z 抬升到 ~1483）
+  add(makeSticker(titleArt('差在哪？三句话讲明白'), 760, 125), 750, b3 + 330, -0.03, 31.64);
+  add(makeSticker(numArt(1, '#111827'), 80, 80), 360, b3 + 560, 0, 34.65);
+  add(makeSticker(noteArt('入口变了\n搜索框 → 对话框'), 520, 260), 740, b3 + 610, -0.04, 34.65);
+  add(makeSticker(numArt(2, '#111827'), 80, 80), 360, b3 + 840, 0, 38.39);
+  add(makeSticker(noteArt('逻辑变了\nSEO 比排名\nGEO 比 AI 信任'), 520, 330), 740, b3 + 890, 0.04, 38.39);
+  add(makeSticker(numArt(3, '#111827'), 80, 80), 360, b3 + 1110, 0, 47.65);
+  add(makeSticker(noteArt('结果变了\nSEO 给流量 · GEO 给推荐'), 560, 260), 740, b3 + 1160, -0.03, 47.65);
+  // Z4 窗口期
+  add(makeSticker(titleArt('现在做，来得及吗？'), 660, 125), 750, b4 + 320, -0.04, 59.49);
+  add(makeSticker(burstArt('来得及！'), 400, 400), 1040, b4 + 520, 0.1, 60.69);
+  add(makeSticker(noteArt('大多数同行\n还不知道 GEO'), 420, 260), 520, b4 + 760, -0.05, 62.69);
+  add(makeSticker(labelArt('理清楚 · 读得懂 · 信得过', '#10b981', '#fff', 52), 760, 92), 750, b4 + 950, 0.03, 67.1);
+  add(makeSticker(emojiArt('🚀', 160), 170, 170), 1120, b4 + 840, 0.12, 69.89);
+  add(makeSticker(titleArt('评论区扣 GEO'), 560, 120), 700, b4 + 1120, 0.04, 73.19);
+  // Z5 结尾
+  add(makeSticker(noteArt('今天就讲到这里'), 420, 160), 600, b5 + 340, -0.03, 77.49);
+  add(makeSticker(emojiArt('🙏', 150), 160, 160), 1020, b5 + 380, 0.12, 78.29);
+  add(makeSticker(titleArt('关注王经理'), 460, 120), 600, b5 + 640, -0.04, 83.6);
+  add(makeSticker(labelArt('少走弯路 · AI 获客不迷路', '#111827', '#ffde4a', 50), 760, 90), 750, b5 + 840, 0.03, 85.5);
+  add(makeSticker(burstArt('下期见！'), 380, 380), 660, b5 + 1000, -0.08, 87.31);
+  add(makeSticker(emojiArt('🔥', 160), 170, 170), 1020, b5 + 970, 0.15, 87.7);
+}
+
+// ---------- 镜头：沿板逐章下移 ----------
+const KEYS = [];
+CH.forEach((c, i) => {
+  const cy = i * ZH + (i === 3 ? 760 : 700);
+  const zA = i === 3 ? 1.08 : 1.12;
+  const zB = i === 3 ? 1.02 : 1.15;
+  const arrive = Math.max(0, c.t0 - (i ? 0.7 : 0));
+  KEYS.push({ t: arrive, y: cy, z: zA });
+  KEYS.push({ t: c.t1 - 0.7, y: cy, z: zB });
+});
+function camAt(t) {
+  let i = 0; while (i < KEYS.length - 2 && t > KEYS[i + 1].t) i++;
+  const a = KEYS[i], b = KEYS[i + 1], u = E.inOutSine(clamp((t - a.t) / (b.t - a.t)));
+  const z = Math.exp(lerp(Math.log(a.z), Math.log(b.z), u));
+  return { x: 750, y: clamp(lerp(a.y, b.y, u), 960 / z + 4, BH - 960 / z - 4), z };
+}
+
+// ---------- 贴纸拍落动画 ----------
+function drawSticker(st, t) {
+  const u = t - st.t0;
+  if (u < 0) return;
+  const land = 0.22;
+  let lift, sc;
+  if (u < land) { const v = u / land; lift = (1 - E.inQuad(v)) * 1; sc = lerp(1.35, 1.0, E.inQuad(v)); }
+  else { const v = u - land; lift = 0; sc = 1 - 0.06 * Math.exp(-v * 18) * Math.cos(v * 40); }
+  const rot = st.rot + (u < land ? (1 - u / land) * 0.25 : 0);
+  const { c, all, w, h } = st.s;
+  const sw = w * sc, shh = h * sc;
+  ctx.save();
+  ctx.translate(st.x, st.y);
+  ctx.rotate(rot);
+  ctx.globalAlpha = 0.38 - 0.18 * lift;
+  if (lift > 0.01) {
+    ctx.filter = `blur(${(4 + lift * 16) * K}px)`;
+    ctx.drawImage(all, -sw / 2 + 6 + lift * 40, -shh / 2 + 10 + lift * 55, sw, shh);
+    ctx.filter = 'none';
+  } else {
+    ctx.drawImage(st.s.sh, -sw / 2 + 6, -shh / 2 + 10, sw, shh);
+  }
+  ctx.globalAlpha = 1;
+  ctx.drawImage(c, -sw / 2, -shh / 2, sw, shh);
+  ctx.restore();
+}
+const glossC = document.createElement('canvas');
+function glossLayer(st, t) {
+  const u = t - st.t0; if (u < 0 || u > 1.0) return;
+  const { all, w, h } = st.s;
+  const land = 0.22;
+  const sc = u < land ? lerp(1.35, 1.0, E.inQuad(u / land)) : 1 - 0.06 * Math.exp(-(u - land) * 18) * Math.cos((u - land) * 40);
+  const rot = st.rot + (u < land ? (1 - u / land) * 0.25 : 0);
+  const tg = glossC.getContext('2d');
+  tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, glossC.width, glossC.height);
+  tg.drawImage(all, 0, 0);
+  tg.globalCompositeOperation = 'source-in';
+  const p = clamp(u / 0.9);
+  const gr = tg.createLinearGradient(0, 0, all.width, all.height);
+  const c0 = clamp(-0.2 + p * 1.2);
+  gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(Math.max(0, c0 - 0.12), 'rgba(255,255,255,0)'); gr.addColorStop(c0, 'rgba(255,255,255,.55)'); gr.addColorStop(Math.min(1, c0 + 0.1), 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  tg.fillStyle = gr; tg.fillRect(0, 0, all.width, all.height);
+  tg.globalCompositeOperation = 'source-over';
+  ctx.save(); ctx.translate(st.x, st.y); ctx.rotate(rot);
+  ctx.drawImage(glossC, 0, 0, all.width, all.height, -w * sc / 2, -h * sc / 2, w * sc, h * sc);
+  ctx.restore();
+}
+
+// ---------- 字幕泡（底部，随配音逐句弹出，自适应屏幕大小，关键词着色） ----------
+const KW = /(GEO|SEO|AI|DeepSeek)/g;
+function segOf(text) {
+  const segs = []; let last = 0; let m;
+  KW.lastIndex = 0;
+  while ((m = KW.exec(text))) { if (m.index > last) segs.push({ t: text.slice(last, m.index), kw: false }); segs.push({ t: m[0], kw: true }); last = m.index + m[0].length; }
+  if (last < text.length) segs.push({ t: text.slice(last), kw: false });
+  return segs;
+}
+function layoutCaption(text, fontPx, maxW) {
+  ctx.font = `900 ${fontPx}px ${SANS}`;
+  const lines = []; let cur = []; let curW = 0;
+  for (const sg of segOf(text)) {
+    let s = sg.t;
+    while (s.length) {
+      let n = 0, wAcc = 0;
+      while (n < s.length) {
+        const cw = ctx.measureText(s[n]).width;
+        if (curW + wAcc + cw > maxW && (cur.length || n > 0)) break;
+        wAcc += cw; n++;
+      }
+      if (n === 0) { lines.push(cur); cur = []; curW = 0; continue; }
+      cur.push({ t: s.slice(0, n), kw: sg.kw, w: wAcc }); curW += wAcc;
+      s = s.slice(n);
+      if (s.length) { lines.push(cur); cur = []; curW = 0; }
+    }
+  }
+  if (cur.length) lines.push(cur);
+  return lines;
+}
+function drawCaption(t) {
+  let c = null;
+  for (const k of window.CAPTIONS) { if (t >= k.s && t < k.e) { c = k; break; } }
+  if (!c) return;
+  const u = t - c.s;
+  const pop = u < 0.18 ? lerp(1.12, 1, E.outQuad(u / 0.18)) : 1 - 0.025 * Math.exp(-(u - 0.18) * 12) * Math.cos((u - 0.18) * 30);
+  const slide = u < 0.18 ? (1 - E.outQuad(u / 0.18)) * 34 : 0;
+  // 自适应字号：从 46px 起，超过 2 行则逐级缩小，保证塞进屏幕安全区
+  const maxW = 880;
+  let fontPx = 46;
+  let lines = layoutCaption(c.text, fontPx, maxW);
+  while (fontPx > 26 && lines.length > 2) { fontPx -= 3; lines = layoutCaption(c.text, fontPx, maxW); }
+  const lh = Math.round(fontPx * 1.42), padX = 34, padY = Math.round(fontPx * 0.62);
+  const maxLineW = Math.max(...lines.map((ln) => ln.reduce((s, x) => s + x.w, 0)), 1);
+  // 气泡宽度随内容收缩（上限 1000，不超屏）
+  const bw = Math.min(1000, Math.max(380, maxLineW + padX * 2 + 22));
+  const bh = lines.length * lh + padY * 2 - 12;
+  const bx = (1080 - bw) / 2, by = 1856 - bh + slide;
+  ctx.save();
+  ctx.translate(540, by + bh / 2); ctx.scale(pop, pop); ctx.translate(-540, -(by + bh / 2));
+  // 阴影
+  ctx.fillStyle = 'rgba(0,0,0,.35)';
+  ctx.beginPath(); ctx.roundRect(bx + 6, by + 10, bw, bh, 26); ctx.fill();
+  // 白泡
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 26); ctx.fill();
+  // 顶部黄胶带
+  ctx.save();
+  ctx.translate(540, by + 2); ctx.rotate(0.05);
+  ctx.fillStyle = 'rgba(255,222,74,.9)'; ctx.fillRect(-80, -17, 160, 34);
+  ctx.restore();
+  // 文本（关键词绿色）
+  ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  lines.forEach((ln, li) => {
+    let total = ln.reduce((s, x) => s + x.w, 0);
+    let x = 540 - total / 2;
+    const y = by + padY + li * lh + lh / 2 - 4;
+    for (const sg of ln) {
+      ctx.font = `900 ${fontPx}px ${SANS}`;
+      ctx.fillStyle = sg.kw ? '#0d8f68' : '#1b1b1b';
+      ctx.fillText(sg.t, x, y);
+      x += sg.w;
+    }
+  });
+  ctx.restore();
+}
+
+// ---------- 品牌 & 暗角 ----------
+const brandS = { c: null, w: 0, h: 0 };
+function buildBrand() { const s = makeSticker(labelArt('王经理讲GEO', '#111827', '#ffde4a', 44), 330, 74, 14); brandS.c = s.c; brandS.w = s.w; brandS.h = s.h; }
+function drawBrand(t) {
+  if (t < 0.6) return;
+  const u = t - 0.6, land = 0.2;
+  const sc = u < land ? lerp(1.3, 1, E.outQuad(u / land)) : 1;
+  ctx.save(); ctx.translate(190, 92); ctx.rotate(-0.03); ctx.globalAlpha = 0.96;
+  ctx.drawImage(brandS.c, -brandS.w * sc / 2, -brandS.h * sc / 2, brandS.w * sc, brandS.h * sc);
+  ctx.restore(); ctx.globalAlpha = 1;
+}
+function drawVignette() {
+  const g = ctx.createRadialGradient(540 * K, 900 * K, 500 * K, 540 * K, 960 * K, 1250 * K);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(8,30,22,.42)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+// ---------- 章节进度条（顶部，6 段胶囊，当前章随时间填充） ----------
+function drawProgress(t) {
+  const n = CH.length;
+  const x0 = 425, x1 = 1030, y = 88;
+  const total = CH[n - 1].t1;
+  const px = (t) => x0 + (clamp(t, 0, total) / total) * (x1 - x0);
+  const dotX = (i) => x0 + (i / (n - 1)) * (x1 - x0);
+  const cx = px(t);
+  ctx.save();
+  ctx.globalAlpha = 0.96;
+  // 基线（暗衬底 + 亮进度线到当前播放位置）
+  ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+  ctx.strokeStyle = '#4de3ff'; ctx.lineWidth = 4;
+  ctx.shadowColor = 'rgba(77,227,255,.8)'; ctx.shadowBlur = 10;
+  ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(cx, y); ctx.stroke();
+  ctx.shadowBlur = 0;
+  // 圆点：已播实心青、未来空心灰，当前章节大圆点发光
+  for (let i = 0; i < n; i++) {
+    const dx = dotX(i), passed = t >= CH[i].t0;
+    const active = t >= CH[i].t0 && t < CH[i].t1;
+    const r = active ? 11 : 6;
+    ctx.beginPath(); ctx.arc(dx, y, r, 0, 7);
+    if (active) {
+      ctx.shadowColor = 'rgba(77,227,255,.95)'; ctx.shadowBlur = 22;
+      ctx.fillStyle = '#4de3ff'; ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(dx, y, 4, 0, 7); ctx.fill();
+    } else if (passed) {
+      ctx.fillStyle = '#4de3ff'; ctx.fill();
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,.38)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2; ctx.stroke();
+    }
+  }
+  // 章节名（点下方）：当前章高亮白，其余渐灰
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let i = 0; i < n; i++) {
+    const active = t >= CH[i].t0 && t < CH[i].t1;
+    const passed = t >= CH[i].t1;
+    ctx.font = `${active ? 900 : 600} 24px ${SANS}`;
+    ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 6;
+    ctx.fillStyle = active ? '#ffffff' : passed ? 'rgba(255,255,255,.62)' : 'rgba(255,255,255,.4)';
+    ctx.fillText(CH[i].name, dotX(i), y + 22);
+    ctx.shadowBlur = 0;
+  }
+  ctx.restore();
+}
+
+Reel.scene({
+  duration: 89.40, fps: 30,
+  fonts: [`900 100px ${SANS}`, `700 46px ${SANS}`, '200px "Segoe UI Emoji"'],
+  setup() {
+    buildBoard(); buildStickers(); buildBrand();
+    glossC.width = Math.max(...ST.map((s) => s.s.c.width)); glossC.height = Math.max(...ST.map((s) => s.s.c.height));
+  },
+  render(t) {
+    const cam = camAt(t);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#123d31'; ctx.fillRect(0, 0, W, H);
+    const z = cam.z * K;
+    ctx.setTransform(z, 0, 0, z, (540 - cam.x * cam.z) * K, (960 - cam.y * cam.z) * K);
+    ctx.drawImage(board, 0, 0, BW, BH);
+    for (const st of ST) drawSticker(st, t);
+    for (const st of ST) glossLayer(st, t);
+    // 屏幕空间层
+    ctx.setTransform(K, 0, 0, K, 0, 0);
+    drawBrand(t);
+    drawProgress(t);
+    drawCaption(t);
+    drawVignette();
+  },
+});
+</script>
+</body></html>

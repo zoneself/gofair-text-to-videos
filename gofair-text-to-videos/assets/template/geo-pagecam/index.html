@@ -1,0 +1,512 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>王经理讲GEO · 真实页面 2.5D 推镜</title>
+<script src="../lib/core.js"></script>
+<script src="../geo-scene/captions.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  #stage { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: hidden;
+    background: radial-gradient(1300px 1000px at 50% 26%, #1c2a5e 0%, #0e1534 52%, #060a1e 100%);
+    font-family: "Microsoft YaHei", system-ui, sans-serif; }
+  #world { position: absolute; inset: 0; perspective: 2300px; perspective-origin: 50% 42%; }
+  #win { position: absolute; left: 27px; top: 238px; width: 1026px; height: 1480px; border-radius: 28px;
+    background: #0d1226; transform-style: preserve-3d; transform-origin: 50% 0; box-shadow: 0 50px 120px rgba(0,0,0,.62), 0 0 0 1px rgba(110,140,255,.22), 0 30px 90px rgba(79,124,255,.16); }
+  #chrome { position: absolute; left: 0; top: 0; right: 0; height: 64px; background: #080d1e; border-radius: 28px 28px 0 0;
+    display: flex; align-items: center; gap: 9px; padding: 0 24px; border-bottom: 1px solid rgba(255,255,255,.08); z-index: 5; }
+  #chrome .d { width: 13px; height: 13px; border-radius: 50%; }
+  #url { margin-left: 22px; flex: 1; height: 38px; border-radius: 19px; background: #1b2650; border: 1px solid rgba(150,175,255,.35);
+    display: flex; align-items: center; padding: 0 18px; font: 700 19px "Segoe UI", sans-serif; color: #f0f5ff;
+    letter-spacing: .4px; text-shadow: 0 0 14px rgba(126,166,255,.45); }
+  #view { position: absolute; left: 0; top: 64px; right: 0; bottom: 0; overflow: hidden; border-radius: 0 0 28px 28px; background: #0d1226;
+    clip-path: inset(0 round 0 0 28px 28px); }
+  #page { position: absolute; left: 0; top: 0; width: 1026px; transform-style: preserve-3d; }
+  .sec { position: relative; width: 1026px; height: 1520px; overflow: hidden; transform-style: preserve-3d; }
+  .sec + .sec { border-top: 1px solid rgba(255,255,255,.07); }
+  #page .el { position: absolute; will-change: transform, opacity; }
+  .lab { font: 800 27px "Segoe UI", sans-serif; letter-spacing: 3px; color: #6f9bff; }
+  .h2 { font: 900 62px/1.2 "Microsoft YaHei"; color: #f2f6ff; letter-spacing: -.5px; }
+  .muted { font: 500 30px/1.5 "Microsoft YaHei"; color: #93a2c8; }
+  .pill { display: inline-flex; align-items: center; justify-content: center; height: 78px; padding: 0 44px;
+    border-radius: 39px; font: 800 30px "Microsoft YaHei"; }
+  .pri { background: linear-gradient(135deg, #4f7cff, #7a5cff); color: #fff; box-shadow: 0 16px 36px rgba(79,124,255,.38); }
+  .ghost { background: #1c2850; color: #7ea6ff; border: 1px solid rgba(126,166,255,.35); }
+  .card { background: #141d3c; border: 1px solid rgba(120,150,255,.20); border-radius: 26px; box-shadow: 0 22px 54px rgba(0,0,0,.45); }
+  .brandmark { width: 46px; height: 46px; border-radius: 13px; background: linear-gradient(135deg, #4f7cff, #7a5cff); }
+  .tag { display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: 22px; font: 800 22px "Microsoft YaHei"; }
+  .row1 { background: #17244c; border: 2px solid #4f7cff; box-shadow: 0 18px 40px rgba(79,124,255,.28); }
+  .res { position: relative; width: 898px; border-radius: 18px; background: #111a38; border: 1px solid rgba(120,150,255,.16); padding: 22px 26px; }
+  .res b { font: 800 32px "Microsoft YaHei"; color: #dfe8ff; }
+  .res u { display: block; text-decoration: none; font: 500 23px "Segoe UI", sans-serif; color: #58c98a; margin: 8px 0 10px; }
+  .res p { margin: 0; font: 500 25px/1.5 "Microsoft YaHei"; color: #8fa0c8; }
+  #cursor { position: absolute; width: 46px; height: 46px; z-index: 400; left: 0; top: 0; }
+</style></head><body><div id="stage">
+  <div id="world"><div id="win">
+    <div id="chrome"><span class="d" style="background:#ff5f57"></span><span class="d" style="background:#febc2e"></span><span class="d" style="background:#28c840"></span>
+      <div id="url">🔒 gofairgeo.com</div></div>
+    <div id="view"><div id="page"></div></div>
+  </div></div>
+</div>
+<script>
+/* ===== 王经理讲GEO · 真实页面 2.5D 推镜（竖屏手机页）· 88.8s =====
+   一屏一章：浏览器窗口微倾，页面像手机站一样逐屏上滑；每屏元素随配音逐张浮出，
+   光标点击"排名第 1 的结果"和"关注"按钮。字幕/进度条/时间轴沿用贴纸版。 */
+const { E, clamp, lerp, spring } = Reel;
+const RS = Reel.RS;
+const stage = document.getElementById('stage');
+if (Reel.RENDER && RS !== 1) stage.style.transform = `scale(${RS})`;
+window.__setJitter = (dx, dy) => { stage.style.transform = `translate(${dx}px, ${dy}px)` + (RS !== 1 ? ` scale(${RS})` : ''); };
+const W = Math.round(1080 * RS), H = Math.round(1920 * RS), K = W / 1080;
+const SANS = "'Microsoft YaHei'";
+
+// HUD 画布（字幕 + 进度条）
+const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+cv.style.cssText = 'position:absolute;left:0;top:0;width:1080px;height:1920px;pointer-events:none;z-index:20';
+stage.appendChild(cv);
+const ctx = cv.getContext('2d');
+
+// ---------- 章节（与配音/SRT 同步） ----------
+const CH = [
+  { t0: 0.000, t1: 9.742, name: '前言' },
+  { t0: 9.742, t1: 17.452, name: 'SEO旧时代' },
+  { t0: 17.452, t1: 31.526, name: 'AI新时代' },
+  { t0: 31.526, t1: 59.608, name: '三点区别' },
+  { t0: 59.608, t1: 77.547, name: '窗口期' },
+  { t0: 77.547, t1: 89.400, name: '结尾' },
+];
+const SH = 1520;   // 每屏高度
+const WIN_SCALE = 0.84;  // 窗口整体缩放：顶部与字幕带拉开间距（字幕带 92~198，窗口 top 238），底边 ~1481（抖音标题区 1500 之上）
+
+const page = document.getElementById('page');
+const win = document.getElementById('win');
+const ELS = [];
+// 每屏白色底板：遮住上一屏可能漏进来的内容
+function secbg(i) {
+  const d = document.createElement('div');
+  d.className = 'el';
+  d.style.cssText = `left:0;top:${i * SH}px;width:1026px;height:${SH + 40}px;background:#0d1226`;
+  page.appendChild(d);
+  return d;
+}
+function add(html, css, t0 = 0, opt = {}) {
+  const d = document.createElement('div');
+  d.className = 'el'; d.innerHTML = html; d.style.cssText = css;
+  (opt.parent || page).appendChild(d);
+  if (opt.parent) { if (t0 != null) ELS.push({ d, t0, dy: opt.dy ?? 46, z: opt.z ?? 0, sc: opt.sc ?? 0.97, keep: false, abs: true }); return d; }
+  ELS.push({ d, t0, dy: opt.dy ?? 46, z: opt.z ?? 0, sc: opt.sc ?? 0.97 });
+  return d;
+}
+const sec = (i, html) => {
+  const s = document.createElement('div');
+  s.className = 'sec'; s.style.top = (i * SH) + 'px'; s.style.position = 'absolute'; s.style.left = '0';
+  s.innerHTML = html; page.appendChild(s); return s;
+};
+const at = (i) => i * SH;   // 屏内 y 基准
+
+// ================= 第 0 屏：Hero =================
+const s0 = at(0);
+secbg(0);
+add(`<div style="display:flex;align-items:center;gap:14px"><div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#4f7cff,#7a5cff);color:#fff;font:900 30px/46px ${SANS};text-align:center">@</div>
+  <b style="font:900 36px ${SANS};color:#f2f6ff">王经理讲GEO</b></div>`,
+  `left:64px;top:${s0 + 44}px`, 0.45, { dy: -20 });
+add(`<div style="display:flex;align-items:center;gap:30px;font:700 27px ${SANS};color:#c3cff0"><span>课程</span><span>案例</span><span>关于</span></div>`,
+  `right:292px;top:${s0 + 56}px`, 0.45, { dy: -20 });
+add(`<span class="pill pri" style="height:66px;font-size:28px">免费评估</span>`, `right:64px;top:${s0 + 40}px`, 0.45, { dy: -20 });
+
+add(`<div style="font:900 70px/1.24 ${SANS};color:#f2f6ff;letter-spacing:-1px">还在花钱做 SEO？<br>
+  <span style="background:linear-gradient(92deg,#4f7cff,#8a5cff);-webkit-background-clip:text;color:transparent">我劝你把手先停住</span></div>`,
+  `left:64px;top:${s0 + 196}px;width:898px`, 0.45, { z: 70 });
+add(`<div class="muted" style="font-size:32px">因为你的客户现在不搜了，<b style="color:#f2f6ff">他们直接问 AI。</b></div>`,
+  `left:64px;top:${s0 + 404}px;width:898px`, 1.6);
+add(`<span class="pill pri">看看客户去哪了 ↓</span><span class="pill ghost" style="margin-left:16px">2 分钟看懂 GEO</span>`,
+  `left:64px;top:${s0 + 486}px`, 3.4, { z: 40 });
+
+// hero 用的 AI 对话卡（预告）
+const chat0 = add(`<div style="height:84px;display:flex;align-items:center;gap:12px;padding:0 30px;border-bottom:1px solid rgba(255,255,255,.08)">
+    <span style="width:14px;height:14px;border-radius:50%;background:#22c55e"></span>
+    <b style="font:800 28px ${SANS};color:#d6e0ff">豆包 · AI 助手</b>
+    <span style="margin-left:auto;font:600 20px ${SANS};color:#7e8db3">在线</span></div>
+  <div style="padding:26px 30px">
+    <div style="margin-left:auto;width:600px;background:#243565;border-radius:22px 22px 6px 22px;padding:20px 24px;font:600 25px/1.5 ${SANS};color:#d6e0ff">我要做外贸包装，找哪家靠谱？</div>
+    <div style="margin-top:22px;width:760px;background:#141d3c;border:1px solid rgba(120,150,255,.18);border-radius:22px 22px 22px 6px;padding:22px 26px">
+      <div style="font:600 25px/1.6 ${SANS};color:#a9b7dd">推荐 3 家供应商，按匹配度排序：</div>
+      <div style="margin-top:16px;display:flex;align-items:center;gap:14px">
+        <span style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#4f7cff,#7a5cff)"></span>
+        <b style="font:800 29px ${SANS};color:#f2f6ff">王经理讲GEO</b>
+        <span class="tag" style="margin-left:auto;background:rgba(34,197,94,.16);color:#5fe39b;height:40px;font-size:20px">匹配度 96%</span></div>
+      <div style="margin-top:12px;font:500 24px/1.6 ${SANS};color:#93a2c8">信息清晰 · 可验证 · 案例齐全</div>
+    </div>
+    <div style="margin-top:20px"><span class="tag" style="background:#182246;border:1px solid rgba(120,150,255,.20);color:#9fb0d8;height:42px;font-size:20px">⏱ 2.4 秒给出答案</span></div>
+  </div>`, `left:64px;top:${s0 + 604}px;width:898px;height:640px;overflow:hidden`, 4.0, { z: 120, dy: 60 });
+chat0.className += ' card';
+
+add(`<div style="display:flex;align-items:center;gap:14px;height:80px;padding:0 28px;border-radius:40px;background:linear-gradient(135deg,#2b3d78,#1d2a55);color:#fff;font:700 27px ${SANS}">
+  👋 我是王经理 · 专讲中小企业用得上的获客方法</div>`, `left:64px;top:${s0 + 1300}px;width:898px`, 5.5, { dy: 30 });
+
+// ================= 第 1 屏：SEO 旧时代 =================
+const s1 = at(1);
+secbg(1);
+add(`<div class="lab">01 —— SEO 旧时代</div>`, `left:64px;top:${s1 + 96}px`, 9.93);
+add(`<div class="h2">以前：打开百度搜关键词</div>`, `left:64px;top:${s1 + 148}px`, 10.53, { z: 50 });
+
+add(`<div style="display:flex;align-items:center;height:96px;padding:0 12px 0 30px;background:#131b36;border:2px solid #4f7cff;border-radius:48px;box-shadow:0 16px 40px rgba(79,124,255,.16)">
+    <span style="font:600 29px ${SANS};color:#c3cff0">🔍</span>
+    <span style="margin-left:16px;font:600 29px ${SANS};color:#d6e0ff">供应商 哪家好</span>
+    <span class="pill pri" style="margin-left:auto;height:72px;font-size:28px">百度一下</span></div>`,
+  `left:64px;top:${s1 + 264}px;width:898px`, 11.53, { z: 80 });
+
+let row1El = null;
+const RES = [
+  ['恒创精密 · 官网', 'www.hengchuang-precision.com', '20 年精密加工，交期稳定，支持打样 · 官网', '排名 1', true],
+  ['华东包装材料有限公司', 'www.hd-pack.cn', '纸箱 / 彩盒 / 缓冲材料，量大从优', '排名 2', false],
+  ['外贸包装怎么选？行业问答', 'zhidao.example.com', '13 个回答 · 3.2 万次浏览', '排名 3', false],
+  ['某某印务 · 首页', 'www.example-print.com', '广告 · 立即咨询', '广告', false],
+];
+RES.forEach(([t, u, p, badge, hot], i) => {
+  const d = add(`<div style="display:flex;align-items:flex-start">
+      <div style="flex:1"><b>${t}</b><u>${u}</u><p>${p}</p></div>
+      <span class="tag" style="flex:none;margin-left:16px;background:${hot ? '#4f7cff' : '#f1f3f9'};color:${hot ? '#fff' : '#8a93ab'}">${badge}</span>
+    </div>`, `left:64px;top:${s1 + 404 + i * 196}px;width:898px;min-height:158px;padding:20px 26px`, 11.73 + i * 0.16, { dy: 34, z: i === 0 ? 90 : 20 });
+  d.className = 'el res' + (hot ? ' row1' : '');
+  if (i === 0) row1El = d;
+});
+
+add(`<div style="font:900 44px/1.4 ${SANS};color:#f2f6ff">一页页翻，<span style="color:#6f9bff">谁排前面，谁接电话</span></div>
+  <div style="margin-top:18px"><span class="tag" style="background:linear-gradient(135deg,#2b3d78,#1d2a55);color:#fff;height:56px;font-size:28px">这就是 SEO：抢的是排名</span></div>`,
+  `left:64px;top:${s1 + 1220}px;width:898px`, 15.03, { z: 60, dy: 40 });
+
+// 光标（点第一条结果）
+const cursor = document.createElement('div');
+cursor.id = 'cursor';
+cursor.innerHTML = `<svg width="46" height="46" viewBox="0 0 24 24"><path d="M4 2l15 9-7 1.6L8.8 20z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
+page.appendChild(cursor);
+
+// ================= 第 2 屏：AI 新时代 =================
+const s2 = at(2);
+secbg(2);
+add(`<div class="lab">02 —— AI 新时代</div>`, `left:64px;top:${s2 + 96}px`, 17.53);
+add(`<div class="h2">现在：客户直接问 AI</div>`, `left:64px;top:${s2 + 148}px`, 18.63, { z: 50 });
+add(`<div style="display:flex;align-items:center;gap:12px;height:74px;padding:0 22px;background:#131b36;border-radius:24px;font:800 26px ${SANS};color:#c3cff0">
+    <span style="padding:10px 22px;border-radius:16px;background:#dfe6ff;color:#101735;box-shadow:0 4px 12px rgba(30,40,90,.08)">豆包</span>
+    <span style="padding:10px 22px;border-radius:16px;background:#2b3d78;color:#fff">DeepSeek</span>
+    <span style="margin-left:auto;font:600 21px ${SANS};color:#7e8db3">对话式搜索</span></div>`,
+  `left:64px;top:${s2 + 268}px;width:600px`, 19.33);
+
+const chat2 = add(`<div style="padding:28px 30px">
+    <div style="margin-left:auto;width:600px;background:#243565;border-radius:24px 24px 6px 24px;padding:22px 26px;font:600 29px/1.5 ${SANS};color:#d6e0ff">我要做外贸包装，找哪家靠谱？</div>
+    <div style="margin-top:26px;background:#141d3c;border:1px solid rgba(120,150,255,.18);border-radius:24px 24px 24px 6px;padding:26px 28px">
+      <div style="font:600 27px/1.65 ${SANS};color:#a9b7dd">根据你的需求，推荐 3 家供应商。第一家的信息最完整、案例可验证：</div>
+      <div style="margin-top:20px;padding:22px;background:#17244c;border:2px solid #4f7cff;border-radius:20px;box-shadow:0 16px 36px rgba(79,124,255,.16)">
+        <div style="display:flex;align-items:center;gap:14px">
+          <span style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#4f7cff,#7a5cff);color:#fff;font:900 28px/44px ${SANS};text-align:center">@</span>
+          <b style="font:900 32px ${SANS};color:#f2f6ff">王经理讲GEO</b>
+          <span class="tag" style="margin-left:auto;background:#4f7cff;color:#fff;height:40px;font-size:20px">首先推荐</span></div>
+        <div style="margin-top:14px;font:500 25px/1.7 ${SANS};color:#9fb0d8">品牌信息清晰 · 案例齐全 · 客户评价可查</div>
+      </div>
+      <div style="margin-top:20px;display:flex;gap:12px">
+        <span class="tag" style="background:#182246;border:1px solid rgba(120,150,255,.20);color:#9fb0d8;height:44px;font-size:21px">⏱ 2.4 秒</span>
+        <span class="tag" style="background:rgba(34,197,94,.16);color:#5fe39b;height:44px;font-size:21px">带推荐理由</span>
+        <span class="tag" style="background:#182246;border:1px solid rgba(120,150,255,.20);color:#9fb0d8;height:44px;font-size:21px">附 3 条链接</span>
+      </div>
+    </div>
+  </div>`, `left:64px;top:${s2 + 368}px;width:898px;height:760px;overflow:hidden`, 20.33, { z: 140, dy: 70 });
+chat2.className += ' card';
+
+add(`<div style="font:900 46px/1.4 ${SANS};color:#f2f6ff">AI 说谁好，<span style="color:#6f9bff">他就信谁</span></div>
+  <div style="margin-top:16px;font:500 27px ${SANS};color:#93a2c8">链接都懒得点 —— 答案里没你，就等于没你</div>`,
+  `left:64px;top:${s2 + 1170}px;width:898px`, 26.93, { z: 60 });
+
+// ================= 第 3 屏：三点区别 =================
+const s3 = at(3);
+secbg(3);
+add(`<div class="lab">03 —— 三点区别</div>`, `left:64px;top:${s3 + 96}px`, 31.63);
+add(`<div class="h2">差在哪？三句话讲明白</div>`, `left:64px;top:${s3 + 148}px`, 31.63, { z: 50 });
+add(`<div style="display:flex;align-items:flex-end;height:60px;font:800 26px ${SANS};color:#7e8db3">
+    <span style="width:200px">维度</span>
+    <span style="flex:1">SEO（搜索引擎优化）</span>
+    <span style="flex:1;color:#6f9bff">GEO（生成式引擎优化）</span></div>`,
+  `left:64px;top:${s3 + 268}px;width:898px`, 32.23);
+
+const CMP = [
+  ['入口变了', '搜索框', '对话框', '用户先去百度，再去你的网站', '用户直接问 AI，答案里就有你'],
+  ['逻辑变了', '比谁排名高', '比谁被 AI 信任', '堆关键词、买排名', '信息清晰、可验证、值得信'],
+  ['结果变了', '给流量', '给推荐', '客户还得自己挑', 'AI 直接把你的名字报给客户'],
+];
+CMP.forEach(([tag, a, b, ad, bd], i) => {
+  const d = add(`<div style="display:flex;align-items:center;height:100%">
+      <div style="width:200px"><b style="font:900 32px ${SANS};color:#f2f6ff">${tag}</b></div>
+      <div style="flex:1;padding-right:24px">
+        <div style="font:900 34px ${SANS};color:#c3cff0">${a}</div>
+        <div style="margin-top:10px;font:500 24px/1.5 ${SANS};color:#7e8db3">${ad}</div></div>
+      <div style="flex:1;border-left:2px solid rgba(120,150,255,.16);padding-left:26px">
+        <div style="font:900 34px ${SANS};color:#6f9bff">${b}</div>
+        <div style="margin-top:10px;font:500 24px/1.5 ${SANS};color:#9fb0d8">${bd}</div></div>
+    </div>`,
+    `left:64px;top:${s3 + 352 + i * 300}px;width:898px;height:268px;padding:0 32px`, i === 0 ? 34.1 : i === 1 ? 37.8 : 47.1,
+    { z: 100, dy: 60 });
+  d.className += ' card';
+});
+
+add(`<div style="height:96px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2b3d78,#1d2a55);border-radius:26px;font:800 32px ${SANS};color:#fff">
+  一句话：SEO 让客户找到你，GEO 让 AI 替你说话</div>`,
+  `left:64px;top:${s3 + 1280}px;width:898px`, 54.83, { z: 70 });
+
+// ================= 第 4 屏：窗口期 =================
+const s4 = at(4);
+secbg(4);
+add(`<div class="lab">04 —— 窗口期</div>`, `left:64px;top:${s4 + 96}px`, 59.73);
+add(`<div class="h2">现在做，来得及吗？</div>`, `left:64px;top:${s4 + 148}px`, 59.73, { z: 50 });
+add(`<div style="padding:40px 44px;background:#182448;border:1px solid rgba(126,166,255,.32);border-radius:30px;color:#fff;overflow:hidden">
+    <div style="font:700 28px ${SANS};color:#a9b4d6">大多数同行 · 还在观望</div>
+    <div style="display:flex;align-items:flex-end;gap:20px;margin-top:16px">
+      <div style="font:900 132px/1 ${SANS};color:#7ea6ff">78%</div>
+      <div style="font:600 26px/1.5 ${SANS};color:#a9b4d6;padding-bottom:16px">的中小企业<br>还没有系统布局 GEO</div>
+    </div>
+    <div style="margin-top:34px;height:22px;border-radius:11px;background:rgba(255,255,255,.14);overflow:hidden">
+      <div id="bar4" style="height:100%;width:22%;border-radius:11px;background:linear-gradient(90deg,#4f7cff,#7ea6ff)"></div></div>
+    <div style="margin-top:16px;font:600 25px ${SANS};color:#a9b4d6">窗口期：先做的，先被 AI 记住 <span style="color:#7ea6ff">（示意数据）</span></div>
+  </div>`, `left:64px;top:${s4 + 268}px;width:898px`, 60.2, { z: 120, dy: 60 });
+
+const CHECKS = [['✓', '品牌信息理清楚', '网站 / 案例 / 资质，一套说清楚'], ['✓', '让 AI 读得懂', '结构化内容，AI 一抓就明白'], ['✓', '让客户信得过', '可验证的案例与口碑']];
+CHECKS.forEach(([ic, h, p], i) => {
+  const d = add(`<div style="display:flex;align-items:center;gap:20px;height:100%;padding:0 30px">
+      <span style="width:52px;height:52px;border-radius:16px;background:rgba(34,197,94,.16);color:#5fe39b;font:900 30px ${SANS};display:flex;align-items:center;justify-content:center">${ic}</span>
+      <div><b style="font:900 31px ${SANS};color:#f2f6ff">${h}</b>
+        <div style="margin-top:6px;font:500 24px ${SANS};color:#93a2c8">${p}</div></div></div>`,
+    `left:64px;top:${s4 + 860 + i * 128}px;width:898px;height:112px`, 67.23 + i * 1.2, { z: 80, dy: 40 });
+  d.className += ' card';
+});
+add(`<div style="height:88px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#4f7cff,#7a5cff);border-radius:44px;font:800 32px ${SANS};color:#fff;box-shadow:0 18px 40px rgba(79,124,255,.3)">
+  现在进场 = 在 AI 推荐里抢先露出</div>`, `left:64px;top:${s4 + 1272}px;width:898px`, 73.33, { z: 90 });
+
+// ================= 第 5 屏：结尾 =================
+const s5 = at(5);
+secbg(5);
+add(`<div style="display:flex;flex-direction:column;align-items:center">
+    <div style="width:130px;height:130px;border-radius:36px;background:linear-gradient(135deg,#4f7cff,#7a5cff);box-shadow:0 24px 50px rgba(79,124,255,.32);color:#fff;font:900 84px/130px ${SANS};text-align:center">@</div>
+    <div style="margin-top:26px;font:900 52px ${SANS};color:#f2f6ff;letter-spacing:1px">王经理讲GEO</div>
+  </div>`, `left:64px;top:${s5 + 190}px;width:898px`, 77.53, { dy: 50, z: 80 });
+add(`<div style="background:#141d3c;border:3px solid rgba(79,124,255,.38);box-shadow:0 20px 50px rgba(0,0,0,.4);border-radius:26px;padding:30px 36px;box-shadow:0 20px 50px rgba(79,124,255,.14);text-align:center">
+    <div style="font:900 50px ${SANS};color:#f2f6ff">我是王经理</div>
+    <div style="margin-top:14px;font:800 36px/1.5 ${SANS};color:#c3cff0">专讲中小企业用得上的 <span style="background:linear-gradient(92deg,#4f7cff,#8a5cff);-webkit-background-clip:text;color:transparent">GEO</span> 获客方法</div>
+  </div>`, `left:64px;top:${s5 + 430}px;width:898px`, 79.70, { dy: 44, z: 120, sc: 0.92 });
+add(`<div style="background:#141d3c;border:3px solid rgba(254,44,85,.45);box-shadow:0 20px 50px rgba(254,44,85,.18);border-radius:26px;padding:28px 36px;box-shadow:0 20px 50px rgba(254,44,85,.13);text-align:center">
+    <div style="font:900 50px ${SANS};color:#fe2c55">给王经理点个关注</div>
+    <div style="margin-top:14px;font:800 36px/1.5 ${SANS};color:#f2f6ff">少走弯路 · <span style="background:linear-gradient(92deg,#4f7cff,#8a5cff);-webkit-background-clip:text;color:transparent">AI</span> 获客不迷路</div>
+  </div>`, `left:64px;top:${s5 + 650}px;width:898px`, 83.83, { dy: 44, z: 130, sc: 0.92 });
+// 订阅按钮：未订阅（白底红边呼吸）→ 点击 → 已订阅（红底弹性 + 光环 + 粒子爆发）
+const subWrap = document.createElement('div');
+subWrap.className = 'el';
+subWrap.style.cssText = `left:64px;top:${s5 + 900}px;width:898px;display:flex;justify-content:center;z-index:150;opacity:0`;
+const spkColors = ['#fe2c55', '#25f4ee', '#ffde4a', '#fe2c55', '#25f4ee', '#ffde4a'];
+subWrap.innerHTML = `<div id="subbtn" style="position:relative;height:96px;padding:0 64px;border-radius:48px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;font:800 40px ${SANS};letter-spacing:3px;border:4px solid #fe2c55;color:#fe2c55;background:#fff;box-shadow:0 18px 44px rgba(254,44,85,.22)"><span id="sublab">＋ 关注</span>
+  <div id="subring" style="position:absolute;left:50%;top:50%;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;border:5px solid #fe2c55;opacity:0"></div>
+  ${Array.from({ length: 14 }, (_, i) => `<span class="spk" style="position:absolute;left:50%;top:50%;width:15px;height:15px;margin:-7px 0 0 -7px;border-radius:50%;background:${spkColors[i % spkColors.length]};opacity:0"></span>`).join('')}
+</div>`;
+page.appendChild(subWrap);
+const subbtn = document.getElementById('subbtn');
+const subring = document.getElementById('subring');
+const sublab = document.getElementById('sublab');
+const SPKS = Array.from(document.querySelectorAll('.spk'));
+
+// 光标落点：直接取"第一条结果""订阅按钮"在页面坐标系里的真实位置（随缩放/滚动自动跟随）
+function pagePos(el) {
+  let x = 0, y = 0, n = el;
+  while (n && n !== page) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+  return { x, y };
+}
+const CUR1 = (() => { const p = pagePos(row1El); return { x: p.x + row1El.offsetWidth * 0.45 - 8, y: p.y + row1El.offsetHeight * 0.55 - 4 }; })();
+const CUR2 = (() => { const p = pagePos(subbtn); return { x: p.x + subbtn.offsetWidth * 0.5 - 8, y: p.y + subbtn.offsetHeight * 0.5 - 4 }; })();
+
+function updateSub(t) {
+  subWrap.style.opacity = clamp((t - 77.83) / 0.6);
+  const su = t - 83.03; // 光标点击时刻
+  if (su < 0) {
+    sublab.textContent = '＋ 关注';
+    subbtn.style.background = '#fff';
+    subbtn.style.color = '#fe2c55';
+    subbtn.style.border = '4px solid #fe2c55';
+    subbtn.style.boxShadow = '0 18px 44px rgba(254,44,85,.22)';
+    subbtn.style.transform = `scale(${1 + 0.025 * Math.sin(t * 3.4)})`;
+    subring.style.opacity = 0;
+    for (const sp of SPKS) sp.style.opacity = 0;
+  } else {
+    const bounce = 1 + 0.26 * Math.exp(-su * 5.5) * Math.cos(su * 16);
+    sublab.textContent = '✓ 已订阅';
+    subbtn.style.background = 'linear-gradient(135deg,#fe2c55,#ff6b81)';
+    subbtn.style.color = '#fff';
+    subbtn.style.border = '4px solid rgba(255,255,255,.55)';
+    subbtn.style.boxShadow = `0 22px 60px rgba(254,44,85,${0.3 + 0.2 * clamp(su)})`;
+    subbtn.style.transform = `scale(${bounce})`;
+    const rp = clamp(su / 0.7);
+    subring.style.opacity = (1 - rp) * 0.7;
+    subring.style.transform = `scale(${1 + rp * 2.4})`;
+    const bp = clamp((su - 0.12) / 1.0);
+    const eo = 1 - Math.pow(1 - bp, 3);
+    SPKS.forEach((sp, i) => {
+      const a = (i / SPKS.length) * Math.PI * 2 + 0.35;
+      const d = 26 + 150 * eo * (0.75 + 0.5 * (((i * 37) % 10) / 10));
+      sp.style.opacity = bp > 0 && bp < 1 ? 1 - bp : 0;
+      sp.style.transform = `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d}px) scale(${1 - bp * 0.6})`;
+    });
+  }
+}
+add(`<div style="text-align:center;font:900 44px ${SANS};background:linear-gradient(92deg,#4f7cff,#8a5cff);-webkit-background-clip:text;color:transparent;letter-spacing:3px">咱们下期，再见！</div>`,
+  `left:64px;top:${s5 + 1080}px;width:898px`, 87.60, { dy: 40, z: 110, sc: 0.92 });
+
+// ---------- 字幕（自适应，蓝色关键词；置于顶部页眉位，避开抖音底部标题区） ----------
+const CAPTION_TOP = 92;   // 顶部起始（状态栏下方）
+const KW = /(GEO|SEO|AI|DeepSeek)/g;
+function segOf(text) {
+  const segs = []; let last = 0; let m; KW.lastIndex = 0;
+  while ((m = KW.exec(text))) { if (m.index > last) segs.push({ t: text.slice(last, m.index), kw: false }); segs.push({ t: m[0], kw: true }); last = m.index + m[0].length; }
+  if (last < text.length) segs.push({ t: text.slice(last), kw: false });
+  return segs;
+}
+function splitClauses(text) {
+  // 在标点后切分（标点留在句尾），用于按标点符号换行
+  return text.split(/(?<=[，。！？、；：…—])/).filter((s) => s.length);
+}
+function layoutCaption(text, fontPx, maxW) {
+  ctx.font = `900 ${fontPx}px ${SANS}`;
+  const lines = []; let cur = []; let curW = 0;
+  const newLine = () => { if (cur.length) lines.push(cur); cur = []; curW = 0; };
+  const W = (s) => ctx.measureText(s).width;
+  for (const clause of splitClauses(text)) {
+    const segs = segOf(clause);
+    const tw = segs.reduce((acc, sg) => acc + W(sg.t), 0);
+    if (curW + tw <= maxW) {                      // 整个子句放得下：原样接上
+      for (const sg of segs) { cur.push({ t: sg.t, kw: sg.kw, w: W(sg.t) }); curW += W(sg.t); }
+      continue;
+    }
+    newLine();                                    // 放不下：整句移到下一行（标点处换行）
+    if (tw <= maxW) {
+      for (const sg of segs) { cur.push({ t: sg.t, kw: sg.kw, w: W(sg.t) }); curW += W(sg.t); }
+      continue;
+    }
+    // 单个子句超行宽：逐字填充兜底（关键词不拆行）
+    for (const sg of segs) {
+      if (sg.kw) {
+        if (curW + W(sg.t) > maxW) newLine();
+        cur.push({ t: sg.t, kw: true, w: W(sg.t) }); curW += W(sg.t);
+        continue;
+      }
+      let s = sg.t;
+      while (s.length) {
+        let n = 0, wAcc = 0;
+        while (n < s.length) {
+          const cw = W(s[n]);
+          if (curW + wAcc + cw > maxW && (cur.length || n > 0)) break;
+          wAcc += cw; n++;
+        }
+        if (n === 0) { newLine(); continue; }
+        cur.push({ t: s.slice(0, n), kw: false, w: wAcc }); curW += wAcc;
+        s = s.slice(n);
+        if (s.length) newLine();
+      }
+    }
+  }
+  if (cur.length) lines.push(cur);
+  return lines;
+}
+function drawCaption(t) {
+  let c = null;
+  for (const k of window.CAPTIONS) { if (t >= k.s && t < k.e) { c = k; break; } }
+  if (!c) return;
+  const u = t - c.s;
+  const pop = u < 0.18 ? lerp(1.06, 1, E.outQuad(u / 0.18)) : 1;
+  const slide = u < 0.18 ? (1 - E.outQuad(u / 0.18)) * 22 : 0;
+  const maxW = 840;   // 行宽收窄：长句在标点处自然换成两行，不为单行而缩字号
+  let fontPx = 28;
+  let lines = layoutCaption(c.text, fontPx, maxW);
+  while (fontPx > 24 && lines.length > 2) { fontPx -= 2; lines = layoutCaption(c.text, fontPx, maxW); }
+  const lh = Math.round(fontPx * 1.42), padX = 32, padY = Math.round(fontPx * 0.60);
+  const maxLineW = Math.max(...lines.map((ln) => ln.reduce((s, x) => s + x.w, 0)), 1);
+  const bw = Math.min(1020, Math.max(340, maxLineW + padX * 2 + 20));
+  const bh = lines.length * lh + padY * 2 - 8;
+  const bx = (1080 - bw) / 2, by = CAPTION_TOP + slide;
+  ctx.save();
+  ctx.translate(540, by + bh / 2); ctx.scale(pop, pop); ctx.translate(-540, -(by + bh / 2));
+  // 无底色，仅描边：文字直接压深色背景，靠描边 + 投影保证清晰
+  ctx.strokeStyle = 'rgba(140,170,255,.55)'; ctx.lineWidth = 3;
+  ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 18;
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 20); ctx.stroke();
+  ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
+  ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  lines.forEach((ln, li) => {
+    let total = ln.reduce((s, x) => s + x.w, 0);
+    let x = 540 - total / 2;
+    const y = by + padY + li * lh + lh / 2 - 4;
+    for (const sg of ln) {
+      ctx.font = `900 ${fontPx}px ${SANS}`;
+      ctx.shadowColor = 'rgba(0,0,0,.85)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 3;
+      ctx.fillStyle = sg.kw ? '#8fb4ff' : '#f7f9ff';
+      ctx.fillText(sg.t, x, y);
+      ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+      x += sg.w;
+    }
+  });
+  ctx.restore();
+}
+
+// ---------- 页面滚动 / 镜头 ----------
+function scrollAt(t) {
+  let y = 0;
+  for (let i = 1; i < CH.length; i++) {
+    const a = CH[i].t0 - 1.05, u = clamp((t - a) / 1.05);
+    if (u > 0) y += E.inOutCubic(u) * SH;
+    if (t > CH[i].t0) y += 0; // 到站后停留
+  }
+  // 每章内缓慢下移 26px，制造"有人正在读"的呼吸感
+  for (let i = 0; i < CH.length; i++) {
+    if (t >= CH[i].t0 && t < CH[i].t1) y += clamp((t - CH[i].t0) / (CH[i].t1 - CH[i].t0)) * 26;
+  }
+  return y;
+}
+
+Reel.scene({
+  duration: 89.40, fps: 30,
+  fonts: [`900 64px ${SANS}`, `700 28px ${SANS}`, `500 27px ${SANS}`, '900 132px "Segoe UI"', '500 17px "Segoe UI"'],
+  setup() { /* sections 已内联 */ },
+  render(t) {
+    // 页面滚动
+    page.style.transform = `translateY(${-scrollAt(t)}px)`;
+    // 窗口：入场 → 全程正直展示 → 结尾轻微推近
+    const arrive = clamp(spring(t, { k: 90, c: 15 }));
+    const flat = E.inOutCubic(clamp((t - 85.83) / 2.4));
+    const push = 1 - 0.02 * flat;
+    win.style.transform = `translateY(${(1 - arrive) * 104}px) scale(${push * WIN_SCALE})`;
+    win.style.opacity = clamp(arrive * 1.6);
+    // 元素逐张浮出
+    for (const o of ELS) {
+      const u = t - o.t0;
+      if (u < 0) { o.d.style.opacity = 0; continue; }
+      const p = clamp(spring(u, { k: 150, c: 14 }));
+      o.d.style.opacity = clamp(u / 0.12);
+      o.d.style.transform = `translateY(${(1 - p) * o.dy}px) translateZ(${(o.z || 0) * p}px) scale(${lerp(o.sc ?? 0.97, 1, p)})`;
+    }
+    // 光标：点"排名 1"的结果，再点"订阅"按钮（坐标 = 目标元素在页面坐标系里的实际位置，随窗口缩放/滚动自动跟随）
+    const tap1 = clamp((t - 14.53) / 0.6), done1 = clamp((t - 15.83) / 0.8);
+    const tap2 = clamp((t - 83.03) / 0.7), done2 = clamp((t - 86.23) / 0.8);
+    let cxp, cyp, vis;
+    if (t < 17.03) {
+      const p = CUR1;
+      cxp = lerp(p.x + 96, p.x, tap1); cyp = lerp(p.y + 140, p.y, tap1);
+      vis = clamp((t - 13.03) / 0.5) * (1 - done1);
+    } else {
+      const p = CUR2;
+      cxp = lerp(p.x + 90, p.x, tap2); cyp = lerp(p.y + 130, p.y, tap2);
+      vis = clamp((t - 81.03) / 0.5) * (1 - done2);
+    }
+    cursor.style.transform = `translate(${cxp}px, ${cyp}px) scale(${(t > 15.13 && t < 15.93) || (t > 83.13 && t < 83.93) ? 0.86 : 1})`;
+    cursor.style.opacity = vis;
+    updateSub(t);
+    // 第 4 屏的进度条生长
+    const bar = document.getElementById('bar4');
+    if (bar) bar.style.width = (22 + 60 * clamp((t - 61.03) / 6)) + '%';
+    // HUD
+    ctx.setTransform(K, 0, 0, K, 0, 0);
+    ctx.clearRect(0, 0, 1080, 1920);
+    drawCaption(t);
+  },
+});
+</script>
+</body></html>
