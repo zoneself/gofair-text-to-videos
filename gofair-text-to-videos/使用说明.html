@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GoFair 文案成片 · 使用说明（视频风格全清单 + 完整用法）</title>
+<style>
+  :root {
+    --ink: #1c2433; --sub: #5b6a82; --line: #e4e9f2; --bg: #f6f8fc;
+    --brand: #4f7cff; --brand2: #8a5cff; --ok: #16a34a; --warn: #d97706;
+    --card: #ffffff; --code-bg: #0f1729; --code-ink: #dbe6ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.75 "Microsoft YaHei", system-ui, sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 32px 80px; }
+  header.hero { background: linear-gradient(135deg, #16204a 0%, #0d1226 60%, #1c2a5e 100%);
+    border-radius: 20px; padding: 40px 44px; color: #fff; margin-bottom: 36px;
+    box-shadow: 0 18px 50px rgba(28,42,94,.28); }
+  .hero h1 { margin: 0 0 10px; font-size: 30px; letter-spacing: 1px; }
+  .hero h1 .en { background: linear-gradient(92deg,#7ea6ff,#b18cff); -webkit-background-clip: text; color: transparent; }
+  .hero p { margin: 0; color: #b9c6ee; font-size: 15px; }
+  .hero .tags { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .hero .tag { font-size: 13px; padding: 5px 14px; border-radius: 999px;
+    border: 1px solid rgba(150,175,255,.45); color: #cfd9ff; background: rgba(79,124,255,.14); }
+  h2 { font-size: 21px; margin: 44px 0 14px; padding-left: 14px; border-left: 5px solid var(--brand); letter-spacing: .5px; }
+  h3 { font-size: 16.5px; margin: 26px 0 10px; color: #24304a; }
+  p, li { color: #33405c; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px 24px; margin: 14px 0; box-shadow: 0 4px 16px rgba(28,42,94,.05); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  @media (max-width: 760px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; }
+  ol.steps > li { position: relative; padding: 12px 16px 12px 56px; margin: 10px 0;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  ol.steps > li::before { counter-increment: s; content: counter(s);
+    position: absolute; left: 14px; top: 14px; width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand), var(--brand2)); color: #fff;
+    font: 800 14px/28px sans-serif; text-align: center; }
+  code.inline { background: #eef2fb; border: 1px solid #dbe3f5; border-radius: 6px;
+    padding: 1px 8px; font: 13px/1.6 Consolas, monospace; color: #274088; }
+  pre { background: var(--code-bg); color: var(--code-ink); border-radius: 12px;
+    padding: 16px 20px; overflow-x: auto; font: 13px/1.7 Consolas, "Courier New", monospace;
+    box-shadow: inset 0 0 0 1px rgba(126,166,255,.18); }
+  pre .c { color: #6f85b8; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; background: var(--card);
+    border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(28,42,94,.05); }
+  th, td { border-bottom: 1px solid var(--line); padding: 10px 14px; text-align: left; font-size: 14px; }
+  th { background: #eef2fb; color: #274088; font-weight: 800; }
+  tr:last-child td { border-bottom: none; }
+  tr.group td { background: #f4f7fe; font-weight: 800; color: #274088; font-size: 13px; letter-spacing: 1px; }
+  .pill { display: inline-block; font-size: 12.5px; font-weight: 800; padding: 2px 12px;
+    border-radius: 999px; margin-right: 6px; }
+  .pill.a { background: #e8f0ff; color: #2f5bd8; }
+  .pill.b { background: #efe9ff; color: #7a3ff0; }
+  .pill.c { background: #e7f9ee; color: #15803d; }
+  .pill.d { background: #fff4e0; color: #b45309; }
+  .tip { border-left: 5px solid var(--ok); background: #f0fbf4; }
+  .warn { border-left: 5px solid var(--warn); background: #fff9ef; }
+  .tip, .warn { padding: 14px 18px; border-radius: 0 12px 12px 0; margin: 14px 0; }
+  .tip b, .warn b { display: block; margin-bottom: 4px; }
+  .ind { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 14px; font-size: 13.5px; line-height: 1.7; color: #33405c; }
+  .ind b { color: #274088; }
+  .kbd { background:#1c2433; color:#fff; border-radius:6px; padding:2px 10px; font-size:13px; }
+  footer { margin-top: 56px; text-align: center; color: #93a0b8; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1><span class="en">GoFair Text to Videos</span> · 使用说明</h1>
+    <p>把一份口播文案自动变成带封面、配音、字幕、BGM 混音的成片短视频。本文件是技能内置说明书：<b>全部视频风格清单 + 每种风格的用法</b>都在这里。</p>
+    <div class="tags">
+      <span class="tag">一句话调用 · 用 @文案.txt 做个视频</span>
+      <span class="tag">配音 · 5男5女音色可选</span>
+      <span class="tag">感情类型 · 5种预设</span>
+      <span class="tag">逐句字幕 · 关键词高亮</span>
+      <span class="tag">自有风格 3 种</span>
+      <span class="tag">风格库 100+</span>
+      <span class="tag">竖屏 / 横屏</span>
+      <span class="tag">BGM 目录随机选曲</span>
+    </div>
+  </header>
+
+  <!-- ================= 快速上手 ================= -->
+  <h2>一、怎么调用（一分钟上手）</h2>
+  <p>在 WorkBuddy 对话框里 @ 一份 txt 口播文案，说：</p>
+  <pre>用 @文案.txt 做个视频</pre>
+  <p>也可以直接输入 <span class="kbd">/gofair-text-to-videos</span> 再附文案。<b>背景音乐不用带</b>——技能自动从你的 BGM 目录随机选一首（首次使用会问一次目录，回复后永久记住）。</p>
+
+  <ol class="steps">
+    <li><b>准备文案</b>：推荐结构为【视频标题】→ 一、前 3 秒钩子 → 二、口播正文 → 三、结尾（身份介绍 + 点关注 + 下期再见）→【封面文案】。缺哪节 AI 会自动推导；【话题标签】等小节不会进配音。</li>
+    <li><b>第一批选择卡 · 风格 + 画幅</b>：AI 通读文案后推荐 3~5 个最匹配的风格候选（附理由），确认风格；画幅选竖屏 1080×1920（发抖音/视频号，默认）或横屏 1920×1080（B站/公众号）。</li>
+    <li><b>第二批选择卡 · 配音</b>：先出 10 段音色试听 mp3（5男5女各念同一句），听完选音色 → 语速（默认 +31%）→ 感情类型（标准口播/激昂热血/沉稳叙事/轻快活泼/温柔知性）。</li>
+    <li><b>确认开工</b>：全部选完 AI 复述一遍，回复"确认"才开始制作。</li>
+    <li><b>等待约 20~30 分钟</b>：配音 → 字幕 → 场景 → 封面 → 渲染 → 混音全自动，中途可改（"语速改 +20%""换个风格重做"）。</li>
+    <li><b>收货</b>：文案目录里只多出一个与文案同名的 mp4（文案.txt → 文案.mp4），封面已内嵌首帧，缓存自动清理。</li>
+  </ol>
+
+  <div class="card" style="border-left:4px solid #4f7cff">
+    <h3 style="margin-top:0">🎵 BGM 随机选曲规则</h3>
+    <p style="margin-bottom:0">① 调用时<b>显式附了音乐文件</b> → 直接用你给的（优先级最高）；② 没附 → 自动从已保存目录<b>随机挑一首</b>；③ 首次没设目录 → 问你要路径并保存到 <code class="inline">config/bgm-dir.txt</code> 长期生效。支持 mp3 / wav / m4a / flac。对 AI 说"换个 BGM 目录：&lt;路径&gt;"或"列出 BGM 目录的歌"即可管理。</p>
+  </div>
+
+  <!-- ================= 风格库总览 ================= -->
+  <h2>二、视频风格全清单（AI 按文案从中推荐 3~5 个）</h2>
+
+  <h3>① 自有定制风格 3 种（模板自带，开箱即用）</h3>
+  <table>
+    <tr><th style="width:190px">风格</th><th>画面效果</th><th>适用场景</th></tr>
+    <tr>
+      <td><span class="pill a">推荐默认</span><b>封面式大字版</b></td>
+      <td>去掉浏览器窗口，全屏封面级大字排版（标题 74~210px），大数字滚动 / VS 对比卡 / 划线钩子 / 勾选清单 / 粒子订阅等丰富组件动画，手机端字号大、清晰易读</td>
+      <td>口播科普 / 观点输出类文案（GEO 获客首选）</td>
+    </tr>
+    <tr>
+      <td><b>页面推镜版</b></td>
+      <td>模拟浏览器窗口逐屏上滑 + 3D 推镜，深色系，像在演示真实网页</td>
+      <td>演示网页 / 产品 / 教程类文案</td>
+    </tr>
+    <tr>
+      <td><b>大字报字幕版</b></td>
+      <td>全屏大字 + 关键词高亮，结构最简单</td>
+      <td>纯口播文案，制作最快</td>
+    </tr>
+  </table>
+
+  <h3>② 通用风格第一期 20 种（styles/）</h3>
+  <p>按文案调性匹配，选中后由 AI 改造模板套用：</p>
+  <table>
+    <tr><th style="width:170px">风格</th><th>视觉特点与适用</th></tr>
+    <tr><td><b>逐帧手绘</b></td><td>手绘线条逐帧生长，讲解感强，适合科普/方法论</td></tr>
+    <tr><td><b>等轴 2.5D</b></td><td>等距视角立体场景，适合产品架构/流程演示</td></tr>
+    <tr><td><b>扁平矢量</b></td><td>扁平插画+色块，商务通用，信息传达干净</td></tr>
+    <tr><td><b>线条动画</b></td><td>白底细线条描摹，极简高级，适合抽象概念</td></tr>
+    <tr><td><b>3D 渲染</b></td><td>真三维物体与光效，产品质感展示</td></tr>
+    <tr><td><b>形变动画</b></td><td>物体平滑变形转场，适合"从A变成B"的叙事</td></tr>
+    <tr><td><b>贴纸风科普</b></td><td>贴纸元素+描边字，轻松活泼，年轻化科普</td></tr>
+    <tr><td><b>赛博朋克 HUD</b></td><td>科技仪表界面光效，AI/数码/前沿科技题材</td></tr>
+    <tr><td><b>拼贴剪贴</b></td><td>纸张撕边+胶带+印章的桌面拼贴，杂志感</td></tr>
+    <tr><td><b>玻璃拟态</b></td><td>磨砂玻璃质感卡片，柔和现代，SaaS/工具类</td></tr>
+    <tr><td><b>包豪斯</b></td><td>几何色块构成主义海报，设计感强</td></tr>
+    <tr><td><b>Synthwave</b></td><td>霓虹日落网格，复古电子乐感，潮玩向</td></tr>
+    <tr><td><b>像素风</b></td><td>8-bit 像素画面，游戏化叙事</td></tr>
+    <tr><td><b>液态流动</b></td><td>流体渐变动态背景，柔美治愈</td></tr>
+    <tr><td><b>综艺花字</b></td><td>大字花字+特效贴图，综艺感强，搞笑/吐槽</td></tr>
+    <tr><td><b>真实页面推镜</b></td><td>写实网页滚动+镜头推进，演示官网/落地页</td></tr>
+    <tr><td><b>编辑数据新闻</b></td><td>数据图表新闻排版，财经/行业报告解读</td></tr>
+    <tr><td><b>水墨国风</b></td><td>宣纸墨晕+朱印，国风文化/传统题材</td></tr>
+    <tr><td><b>黏土定格</b></td><td>黏土手作定格动画，温暖童趣</td></tr>
+    <tr><td><b>蓝图工程图</b></td><td>工程蓝图线稿，建筑/制造/技术方案</td></tr>
+  </table>
+
+  <h3>③ 第二期 20 种（vol2/，同风格框架、题材全新）</h3>
+  <div class="grid3">
+    <div class="ind"><b>夏夜烟火</b>·夜空烟花叙事</div>
+    <div class="ind"><b>小楼日常</b>·街巷生活切片</div>
+    <div class="ind"><b>连锁反应</b>·多米诺因果链</div>
+    <div class="ind"><b>谐波之舞</b>·波形律动视觉</div>
+    <div class="ind"><b>琥珀香水</b>·液体光泽质感</div>
+    <div class="ind"><b>万物形变</b>·连续变形转场</div>
+    <div class="ind"><b>咖啡旅程</b>·从豆到杯全程</div>
+    <div class="ind"><b>轨道侦察</b>·太空俯瞰视角</div>
+    <div class="ind"><b>旅行手账</b>·手绘旅行日记</div>
+    <div class="ind"><b>液态玻璃</b>·流体质感玻璃</div>
+    <div class="ind"><b>节奏构成</b>·音乐节拍驱动</div>
+    <div class="ind"><b>喷气飞跃</b>·高速穿越运镜</div>
+    <div class="ind"><b>黄昏特快</b>·列车窗外风景</div>
+    <div class="ind"><b>大理石流体</b>·石材纹理流动</div>
+    <div class="ind"><b>压哨绝杀</b>·体育高光时刻</div>
+    <div class="ind"><b>电商下单</b>·购物转化演示</div>
+    <div class="ind"><b>奶茶成本</b>·成本拆解叙事</div>
+    <div class="ind"><b>墨竹清风</b>·水墨竹影雅致</div>
+    <div class="ind"><b>小火箭出发</b>·发射成长隐喻</div>
+    <div class="ind"><b>蓝图单车</b>·机械图纸骑行</div>
+  </div>
+
+  <h3>④ 行业广告片 60 条（industry/，文案对应具体行业时优先推荐）</h3>
+  <p>每个行业一条 15 秒定制场景，由 AI 按你的文案改写改编：</p>
+  <div class="grid3">
+    <div class="ind">咖啡烘焙 · 民宿 · 婚礼定制</div>
+    <div class="ind">工厂数字化 · 园区招商 · 供应链SaaS</div>
+    <div class="ind">教育培训 · 企业内训 · AI做的App</div>
+    <div class="ind">建筑事务所 · 律所 · 腕表</div>
+    <div class="ind">零食 · 美妆口红 · 小家电</div>
+    <div class="ind">健身工作室 · 蓝牙耳机 · 线上课程</div>
+    <div class="ind">家政保洁 · 宠物医院 · 社区生鲜</div>
+    <div class="ind">无人机测绘 · 智能安防 · 电竞馆</div>
+    <div class="ind">独立书店 · 定制旅行 · 私房菜</div>
+    <div class="ind">美业预约 · 智能家居 · 深夜电台</div>
+    <div class="ind">设计工作室 · 几何家居 · 画廊展览</div>
+    <div class="ind">复古Livehouse · 汽车改装洗车 · 潮玩复古游戏厅</div>
+    <div class="ind">独立游戏工作室 · 少儿编程 · 奶茶会员积分</div>
+    <div class="ind">珠宝首饰 · 高端护肤精华 · 精酿啤酒</div>
+    <div class="ind">街边小炒探店 · 农产品直播带货 · 驾校</div>
+    <div class="ind">SaaS官网 · 电商详情页 · 招聘小程序</div>
+    <div class="ind">财税记账 · 体检报告 · 门店数据</div>
+    <div class="ind">茶庄 · 中医馆 · 古镇文旅</div>
+    <div class="ind">亲子手工坊 · 烘焙蛋糕 · 宠物用品</div>
+    <div class="ind">全屋定制 · 工业零件 · 智能硬件</div>
+  </div>
+
+  <!-- ================= 配音 ================= -->
+  <h2>三、配音可选（音色 + 语速 + 感情）</h2>
+
+  <h3>音色表（5 男 5 女，均已实测可用）</h3>
+  <table>
+    <tr><th style="width:64px">性别</th><th style="width:90px">音色</th><th style="width:300px">voice 参数</th><th>特点 / 适用</th></tr>
+    <tr class="group"><td colspan="4">男声</td></tr>
+    <tr><td>男</td><td><b>云健</b></td><td>zh-CN-YunjianNeural</td><td>热血激昂、解说感强，科普/数码/带货首选</td></tr>
+    <tr><td>男</td><td>云扬</td><td>zh-CN-YunyangNeural</td><td>新闻主播音，专业稳重，财经/行业解读</td></tr>
+    <tr><td>男</td><td>云希</td><td>zh-CN-YunxiNeural</td><td>阳光年轻，语感轻快，生活方式/轻科普</td></tr>
+    <tr><td>男</td><td>云夏</td><td>zh-CN-YunxiaNeural</td><td>少年音、萌系活泼，年轻化人设/搞笑向</td></tr>
+    <tr><td>男</td><td>安德鲁</td><td>en-US-AndrewMultilingualNeural</td><td>磁性暖男、表现力强，中文带轻微外语腔</td></tr>
+    <tr class="group"><td colspan="4">女声</td></tr>
+    <tr><td>女</td><td><b>晓晓</b></td><td>zh-CN-XiaoxiaoNeural</td><td>温暖亲和、全能通用，最稳女声</td></tr>
+    <tr><td>女</td><td>晓伊</td><td>zh-CN-XiaoyiNeural</td><td>年轻干练，职场/干货分享</td></tr>
+    <tr><td>女</td><td>晓北</td><td>zh-CN-liaoning-XiaobeiNeural</td><td>东北话，幽默接地气，唠嗑感强</td></tr>
+    <tr><td>女</td><td>晓妮</td><td>zh-CN-shaanxi-XiaoniNeural</td><td>陕西话，明亮大方，地方特色人设</td></tr>
+    <tr><td>女</td><td>艾娃</td><td>en-US-AvaMultilingualNeural</td><td>亲切甜美、表现力丰富，中文带轻微外语腔</td></tr>
+  </table>
+
+  <h3>感情类型表（5 种预设，语速偏移自动叠加在基础语速上）</h3>
+  <table>
+    <tr><th style="width:120px">感情类型</th><th>语速偏移</th><th>音调</th><th>音量</th><th>适用场景</th></tr>
+    <tr><td><b>标准口播</b></td><td>+0%</td><td>-2Hz</td><td>+0%</td><td>默认，通用</td></tr>
+    <tr><td>激昂热血</td><td>+8%</td><td>+4Hz</td><td>+8%</td><td>钩子开场、带货、励志</td></tr>
+    <tr><td>沉稳叙事</td><td>-4%</td><td>-8Hz</td><td>-4%</td><td>纪录片感、深度内容</td></tr>
+    <tr><td>轻快活泼</td><td>+5%</td><td>+8Hz</td><td>+4%</td><td>好物、日常、搞笑</td></tr>
+    <tr><td>温柔知性</td><td>-2%</td><td>+2Hz</td><td>+0%</td><td>情感、治愈、女性向</td></tr>
+  </table>
+
+  <!-- ================= 铁律与组件 ================= -->
+  <h2>四、画面质量标准（每次出片自动执行）</h2>
+  <div class="grid2">
+    <div class="card" style="border-top:4px solid var(--brand)">
+      <h3 style="margin-top:0">铁律 ① 组件丰富 · 有高级感</h3>
+      <ul style="margin:6px 0 0">
+        <li>一屏至少混用 2~3 种组件，全片至少 <b>5 种以上组件类型</b>，不许一种卡片铺到底</li>
+        <li>每个组件必须带动效：浮出上滑、缩放弹入、光效扫过、描边点亮、数字滚动，错峰出现（0.3~0.6s）</li>
+        <li>排版对齐统一、主次分明、留白 ≥30%，全片色彩 ≤3 种</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:4px solid var(--brand2)">
+      <h3 style="margin-top:0">铁律 ② 文字提炼 · 不照抄口播稿</h3>
+      <ul style="margin:6px 0 0">
+        <li>屏幕文字是<b>视觉摘要</b>，不是配音逐字稿——逐字内容由字幕带承担</li>
+        <li>只提炼<b>重点词、关键数字、金句</b>；每段只留 1 行主标题 + 1 行小注的量级</li>
+        <li>同一重点用不同组件匹配展示；每屏宁少勿多</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>内置组件库（AI 按文案内容自动匹配）</h3>
+  <table>
+    <tr><th style="width:150px">组件类型</th><th>适用内容</th><th>样式要点</th></tr>
+    <tr><td><b>数字大卡</b></td><td>关键数据（提升率/成本/时长）</td><td>数字 80~120px 主色渐变，下方小注灰字</td></tr>
+    <tr><td><b>对比双栏卡</b></td><td>前后对比 / A vs B</td><td>左右两栏 + 中间 VS 圆徽，败方降饱和</td></tr>
+    <tr><td><b>清单勾选卡</b></td><td>要点/步骤列表</td><td>每行 ✓ 图标逐条浮出，错峰 0.4s</td></tr>
+    <tr><td><b>金句引用条</b></td><td>核心结论/口号</td><td>左侧竖色条 + 大字一行，轻微光效</td></tr>
+    <tr><td><b>标签/徽章组</b></td><td>关键词群、能力项</td><td>圆角胶囊错落排布，逐个弹入</td></tr>
+    <tr><td><b>图标+短语句</b></td><td>功能/卖点</td><td>圆底图标 + 1 行短句，2×2 或横向排</td></tr>
+    <tr><td><b>时间线/步骤条</b></td><td>流程、方法论</td><td>竖向节点连线，节点依次点亮</td></tr>
+    <tr><td><b>仪表/进度件</b></td><td>占比、达成度</td><td>弧形/条形进度，动画增长</td></tr>
+  </table>
+
+  <!-- ================= 环境依赖 ================= -->
+  <h2>五、环境依赖（首次使用前装一次）</h2>
+  <table>
+    <tr><th>依赖</th><th>用途</th><th>安装方式</th></tr>
+    <tr><td><b>Node.js ≥ 18</b></td><td>运行逐帧渲染器 render-p.js</td><td>官网 nodejs.org 下载 LTS 安装包</td></tr>
+    <tr><td><b>Playwright + Chromium</b></td><td>无头浏览器逐帧截图</td><td><code class="inline">npm i playwright && npx playwright install chromium</code></td></tr>
+    <tr><td><b>Python 3 + edge-tts</b></td><td>10 款音色配音 + SRT 生成</td><td><code class="inline">pip install edge-tts</code></td></tr>
+    <tr><td><b>ffmpeg</b></td><td>混音、合成、封面叠加</td><td>官网下载后把 bin 目录加入 PATH</td></tr>
+  </table>
+
+  <div class="warn">
+    <b>⚠️ 首次运行前自检</b>
+    逐条执行 <code class="inline">node -v</code>、<code class="inline">python --version</code>、<code class="inline">ffmpeg -version</code>、<code class="inline">pip show edge-tts</code>，四条都正常再开工；缺哪样装哪样。
+  </div>
+
+  <!-- ================= FAQ ================= -->
+  <h2>六、常见问题</h2>
+
+  <div class="card"><b>Q1：AI 没弹选择卡片直接开做了？</b><br>
+  技能未触发。重启 WorkBuddy，或直接输入 <span class="kbd">/gofair-text-to-videos</span> 手动调用。</div>
+
+  <div class="card"><b>Q2：文案里的 GEO / SEO / AI / DeepSeek / 同行 读得不对？</b><br>
+  脚本已内置定稿读音规则：SEO 拆 "S E O"、GEO 读 "记 E 欧"、AI 原样读"爱"、DeepSeek 拆 "Deep Seek" 连读；多音字"同行"强制读 háng（字幕仍显示"同行"）。个别词仍读错时用 <code class="inline">--fix 读音修正.txt</code> 补充。</div>
+
+  <div class="card"><b>Q3：配音报错连不上 / 音色缺一两个？</b><br>
+  edge-tts 走微软公共接口，需可访问外网，偶发限流等一分钟重试。音色列表会不定期调整，可让 AI 核对更新音色表。</div>
+
+  <div class="card"><b>Q4：交付目录里没有封面/字幕文件？</b><br>
+  这是设计行为：唯一交付物是<b>与文案同名的 mp4</b>，封面已内嵌首帧和元数据，其余中间产物随缓存自动清除。</div>
+
+  <footer>GoFair Text to Videos · 技能内置使用说明 · v1.4.0 · 全部风格与用法如有更新以技能最新打包版为准</footer>
+</div>
+</body>
+</html>

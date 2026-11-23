@@ -71,15 +71,20 @@ def build_pronunciation(src: str, fix_pairs):
     - GEO -> "记 E 欧"  G 直接读易断成"GE..O"，用谐音"记"最顺滑（与 SEO 同节奏）
     - AI  -> 不处理     中文音色本就读"爱"，拆开反而生硬
     - DeepSeek -> "Deep Seek"  按英文单词连读，避免整体被当乱码
+
+    多音字内置修正（SRT 自动还原为原词）:
+    - 同行 -> "同航"   edge-tts 把"同行"默认读 xíng；本技能语境（同行业/竞争对手）永远是 háng
     """
     prn = src
     prn = prn.replace("DeepSeek", "Deep Seek")
     prn = re.sub(r"SEO", "S E O", prn)
     prn = re.sub(r"GEO", "记 E 欧", prn)
+    prn = prn.replace("同行", "同航")   # "同行(háng)" edge-tts 默认读 xíng，谐音强制读 háng（本技能语境里同行永远指同行业）
     for wrong, homo in fix_pairs:
         prn = prn.replace(wrong, homo)
     reverse = {
         "Deep Seek": "DeepSeek", "S E O": "SEO", "记 E 欧": "GEO",
+        "同航": "同行",
     }
     for wrong, homo in fix_pairs:
         reverse[homo] = wrong

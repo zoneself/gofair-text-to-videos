@@ -8,16 +8,18 @@
 - Python 3 + `pip install edge-tts`
 - ffmpeg（PATH 可用）
 
-## 1. 工作区结构（复制 assets/template 后）
+## 1. 工作区结构（复制 template/ 后）
 
 ```
 项目/
-├── render-p.js              # 逐帧渲染器（playwright 截图 + 子帧混帧）
-├── package.json             # playwright 依赖
-├── lib/core.js              # Reel 场景引擎（spring/lerp/缓动 + __seek/__duration）
-├── geo-pagecam/index.html   # 页面推镜版场景模板（v18 深色系，1080×1920）
-├── geo-scene/captions.js    # 字幕数据 window.CAPTIONS=[{s,e,text},...]
-├── geo-cover/cover.html     # 封面排版模板
+├── template/                # 模板文件夹（内部全部同一层，无更深层级）
+│   ├── render-p.js          # 逐帧渲染器（playwright 截图 + 子帧混帧）
+│   ├── package.json         # playwright 依赖
+│   ├── core.js              # Reel 场景引擎（spring/lerp/缓动 + __seek/__duration）
+│   ├── pagecam.html         # 页面推镜版场景模板（深色系，1080×1920）
+│   ├── bigtext.html         # 封面式大字版场景模板（用户定稿风格）
+│   ├── captions.js          # 字幕数据 window.CAPTIONS=[{s,e,text},...]
+│   └── cover.html           # 封面排版模板
 ├── assets/audio/            # voiceover.mp3 / subtitle.srt / bgm
 └── out/                     # 帧缓存与成片
 ```
@@ -30,19 +32,20 @@ python scripts/gen_voiceover.py --script 文案.txt --out-dir assets/audio --rat
 
 - 音色 `zh-CN-YunjianNeural`（云健），pitch -2Hz；语速默认 +31%
 - 文案预处理（脚本内置，2026-11 用户试听定稿）：`SEO→S E O`（S 读"艾斯"节奏自然）、`GEO→记 E 欧`（G 直接读会断成"GE..O"，谐音"记"最顺滑）、`AI` 不处理（本就读"爱"，拆开生硬）、`DeepSeek→Deep Seek`（按单词连读），写 SRT 时自动还原为正常写法
-- `--fix` 文件每行一条 `错读字=谐音字`（如 `同行=同航`），SRT 输出还原为错读字
+- 多音字内置修正（SRT 自动还原为原词）：**`同行→同航`**——edge-tts 把"同行"默认读 xíng，但本技能语境（同行业/竞争对手）永远是 háng，用谐音"同航"强制读对；新发现读错的词照此加进 `build_pronunciation()` 的内置表
+- `--fix` 文件每行一条 `错读字=谐音字`（如 `同行=同航`），适合临时/单篇修正；高频错词应沉淀为脚本内置，SRT 输出还原为错读字
 - 输出：`voiceover.mp3`、`subtitle.srt`，stdout 打印 `sentences=N last_end=XX.XXs` —— **场景 duration 必须用这个总时长**
 - 若文案修改导致句子数变化：新 SRT 与旧场景时间轴按"文本相同→时间平移；新增句→取新句时间"重映射（参考 resync 思路：章节级 delta，逐组替换带计数断言，防止多行替换漏移）
 
 ## 3. 字幕（srt_to_captions.py）
 
 ```bash
-python scripts/srt_to_captions.py assets/audio/subtitle.srt geo-scene/captions.js
+python scripts/srt_to_captions.py assets/audio/subtitle.srt template/captions.js
 ```
 
-生成 `window.CAPTIONS = [{"s":..,"e":..,"text":".."}]`。关键词高亮在 geo-pagecam/index.html 的 `KW = /(GEO|SEO|AI|DeepSeek)/g` 正则里，按新文案主题改。
+生成 `window.CAPTIONS = [{"s":..,"e":..,"text":".."}]`。关键词高亮在 template/pagecam.html 的 `KW = /(GEO|SEO|AI|DeepSeek)/g` 正则里，按新文案主题改。
 
-## 4. 场景搭建（geo-pagecam/index.html）
+## 4. 场景搭建（template/pagecam.html）
 
 ### 4.1 布局几何（v19 定稿，勿随意改动）
 
@@ -100,11 +103,11 @@ python scripts/srt_to_captions.py assets/audio/subtitle.srt geo-scene/captions.j
 ### 4.4 静帧验证
 
 ```bash
-node render-p.js geo-pagecam/index.html x --still 5:out/a5.png --still 44:out/a44.png --still 85:out/a85.png --nogpu
+node render-p.js template/pagecam.html x --still 5:out/a5.png --still 44:out/a44.png --still 85:out/a85.png --nogpu
 ```
 检查：文字溢出/截断、卡片重叠、字幕与窗口重叠、封面元素完整；**组件多样性达标（一屏 ≥2 种样式、全片 ≥5 种）、无整句照抄口播稿的大段文字**。用 ViewImage 目检。
 
-### 4.5 封面式大字版模板（geo-bigtext/index.html，用户定稿风格）
+### 4.5 封面式大字版模板（template/bigtext.html，用户定稿风格）
 
 用户反馈页面推镜版"网页字体太小看不清"后定稿的第二套自有风格：**去掉浏览器窗口，内容直接全屏铺排**，字号为封面级。
 
@@ -133,15 +136,15 @@ node render-p.js geo-pagecam/index.html x --still 5:out/a5.png --still 44:out/a4
 
 **内置组件（改文案时保留组件结构、替换文字）**：SEO 划线钩子（strike 线 scaleX 动画 0.9~2.2s）、黄色胶囊 pill-y、芯片 chip、搜索框、搜索结果卡 ×3、AI 对话卡、GEO 定义大字卡（呼吸光晕 drop-shadow 正弦）、VS 对比卡 ×3、78% 数字滚动卡（0→78 计数 + 进度条生长，61~66.2s）、勾选清单 ×3、渐变结论条、订阅按钮（白底呼吸→83.03s 光标点击→红底弹跳 + 光环 + 14 粒子爆发）。
 
-**复用与差异**：字幕 HUD（drawCaption/splitClauses/KW）、CH 时间轴、scrollAt、updateSub 订阅逻辑与 geo-pagecam 完全同源；配音混音可复用同一音轨。改造新文案时：换 CH 时间轴 → 换各屏文字（遵守 4.3 组件化要求，提炼不照抄）→ 对齐元素 t0 → 静帧验证。
+**复用与差异**：字幕 HUD（drawCaption/splitClauses/KW）、CH 时间轴、scrollAt、updateSub 订阅逻辑与页面推镜版（pagecam.html）完全同源；配音混音可复用同一音轨。改造新文案时：换 CH 时间轴 → 换各屏文字（遵守 4.3 组件化要求，提炼不照抄）→ 对齐元素 t0 → 静帧验证。
 
 ## 5. 全量渲染
 
 ```bash
-node render-p.js geo-pagecam/index.html x --frames out/frames --mb 2 --shutter 0.5 --nogpu
+node render-p.js template/pagecam.html x --frames out/frames --mb 2 --shutter 0.5 --nogpu
 ```
 
-（封面式大字版同理：`node render-p.js geo-bigtext/index.html x --frames out/frames-bt --mb 2 --shutter 0.5 --nogpu`，实测 89.4s 约 6 分 45 秒）
+（封面式大字版同理：`node render-p.js template/bigtext.html x --frames out/frames-bt --mb 2 --shutter 0.5 --nogpu`，实测 89.4s 约 6 分 45 秒）
 
 - 90s × 30fps ≈ 2682 帧，约 7~10 分钟；`--mb 2` 双子帧 + tmix 混帧出运动模糊
 - **已知无害报错**：结尾 `fs.rmSync(_sub)` 在沙箱里可能抛 Node 错误——帧已混好，`ls out/frames/f*.jpg | wc -l` 验证 = duration×fps 即可
@@ -165,59 +168,58 @@ ffmpeg -y -v error -i assets/audio/voiceover.mp3 -i assets/audio/bgm.mp3 -filter
 
 ### 6.2 帧序列 + 音轨 + 封面首帧
 
+输出文件名直接用**文案名**（`文案.txt` → `out/文案.mp4`），少一次改名：
+
 ```bash
 ffmpeg -y -v error -framerate 30 -i out/frames/f%05d.jpg -i out/mixed.wav -loop 1 -framerate 30 -t 1.0 -i "out/封面.png" \
   -filter_complex "[2:v]format=rgba,fade=t=out:st=0.55:d=0.45:alpha=1[ov];[0:v][ov]overlay=0:0:enable='lt(t,1.02)'[v]" \
-  -map "[v]" -map 1:a -c:v libx264 -preset medium -crf 15 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 192k -shortest out/video.mp4
+  -map "[v]" -map 1:a -c:v libx264 -preset medium -crf 15 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 192k -shortest "out/文案.mp4"
 ```
 
 ### 6.3 封面写入元数据
 
 ```bash
-ffmpeg -y -v error -i out/video.mp4 -i "out/封面.png" -map 0 -map 1 -c copy -disposition:v:1 attached_pic out/tmp.mp4 && mv out/tmp.mp4 out/video.mp4
-```
-
-### 6.4 预览
-
-```bash
-ffmpeg -y -v error -i out/video.mp4 -vf scale=720:1280 -c:v libx264 -preset medium -crf 23 -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart out/预览.mp4
+ffmpeg -y -v error -i "out/文案.mp4" -i "out/封面.png" -map 0 -map 1 -c copy -disposition:v:1 attached_pic out/tmp.mp4 && mv out/tmp.mp4 "out/文案.mp4"
 ```
 
 抽首帧确认封面、抽 0.9s 确认淡出正常。
 
-### 6.5 交付收尾（硬性要求：移动成片到文案目录 + 清空缓存）
+### 6.4 不做预览文件
+
+**不要生成 720p 预览**（2026-11 定稿：只交付一个成片）。`present_files` 直接给成片本身即可。
+
+### 6.5 交付收尾（硬性要求：只出同名 mp4 + 清空缓存）
 
 **第一步：确定文案目录。** 从用户提供的文案文件路径（如 `D:\video-works\proj1\文案.txt`）取其所在目录作为交付目录。
 
-**第二步：移动交付物**（PowerShell `Move-Item -LiteralPath`，成片文件名建议带视频标题前缀，目标有同名文件时先重命名不覆盖）：
+**第二步：移动交付物 —— 只有一个文件**（PowerShell `Move-Item -LiteralPath`）：
 
-| 文件 | 来源 |
-|---|---|
-| `<标题>-成片.mp4` | out/video.mp4 |
-| `<标题>-预览.mp4` | out/预览.mp4 |
-| `<标题>-封面.png` | out/封面.png |
-| voiceover.mp3 | assets/audio/voiceover.mp3 |
-| subtitle.srt | assets/audio/subtitle.srt |
+| 文件 | 来源 | 说明 |
+|---|---|---|
+| `<文案名>.mp4` | `out/文案.mp4` | **唯一交付物**，与文案 txt 同名（`文案.txt` → `文案.mp4`） |
+
+- **不交付**：封面 PNG、voiceover.mp3、subtitle.srt、720p 预览 mp4——封面只作为首帧素材叠进视频（+ attached_pic 元数据），音频与字幕只服务于合成
+- 目标目录已存在同名 mp4 时：先问用户「覆盖 / 改名」，不静默覆盖
 
 **第三步：删除全部生成缓存**（逐条 PowerShell `Remove-Item -LiteralPath <路径> -Recurse -Force -Confirm:$false`，不要 rm -rf）：
 
 - `out/frames/`（约 1.2GB 帧缓存，最大头）
-- `out/mixed.wav`、`out/video.mp4`（中间产物）、`out/a*.png`（--still 静帧）、`out/预览.mp4`、`out/封面.png`（已移走确认后）
+- `out/mixed.wav`、`out/封面.png`、`out/a*.png` 等 `--still` 静帧
+- `assets/audio/voiceover.mp3`、`assets/audio/subtitle.srt`、`assets/audio/bgm.mp3`
 - `assets/audio/demo/`（10 段试听 mp3）
-- 配音生成的 `voiceover.mp3`、`subtitle.srt` 原位置（已复制/移走）
 
-**不要删**：工程源文件（geo-pagecam/index.html、geo-scene/captions.js、geo-cover/cover.html、lib/、render-p.js）——保留供下次复用改造；若用户明确不再需要整个项目目录，需经用户确认后才可删。
+**不要删**：工程源文件（template/pagecam.html、template/captions.js、template/cover.html、template/、render-p.js）——保留供下次复用改造；若用户明确不再需要整个项目目录，需经用户确认后才可删。
 
-**第四步**：清理完成后 `present_files`（预览在前、成片在后），并明确告知用户成片现在位于文案所在目录。
+**第四步**：清理完成后 `present_files` 交付**成片本身**，并明确告知「成片已保存为 `<文案名>.mp4`，就在文案同一目录」。
 
-## 7. 封面模板（geo-cover/cover.html）
+## 7. 封面模板（template/cover.html）
 
 结构：顶部品牌行（@名称 + 右侧小标签）→ 大字标题（可两行）→ 黄色胶囊副题 → 三个内容 chips → 底部居中页脚小字（"AI"青色 #25f4ee 高亮）。深色底 + 大字号（大字 ~150px）。
 
 截图：
 
 ```bash
-node -e "const {chromium}=require('playwright');(async()=>{const b=await chromium.launch({args:['--disable-gpu','--force-color-profile=srgb']});const p=await b.newPage({viewport:{width:1080,height:1920},deviceScaleFactor:1});await p.goto('file:///'+process.cwd().replace(/\\\\/g,'/')+'/geo-cover/cover.html');await p.waitForTimeout(500);await p.screenshot({path:'out/封面.png',clip:{x:0,y:0,width:1080,height:1920}});await b.close();console.log('ok')})();"
+node -e "const {chromium}=require('playwright');(async()=>{const b=await chromium.launch({args:['--disable-gpu','--force-color-profile=srgb']});const p=await b.newPage({viewport:{width:1080,height:1920},deviceScaleFactor:1});await p.goto('file:///'+process.cwd().replace(/\\\\/g,'/')+'/template/cover.html');await p.waitForTimeout(500);await p.screenshot({path:'out/封面.png',clip:{x:0,y:0,width:1080,height:1920}});await b.close();console.log('ok')})();"
 ```
 
 排版雷区：孤字换行（缩字号或加 white-space:nowrap）、副标题折行、下划线过长、chips 换行——截图后必须目检一轮。
